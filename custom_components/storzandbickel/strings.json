@@ -1,0 +1,116 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup Method",
+        "description": "Choose how you want to add your Storz & Bickel device.",
+        "data": {
+          "setup_method": "Setup method"
+        },
+        "data_description": {
+          "setup_method": "Scan looks for powered-on devices in Bluetooth range. Manual entry is useful if scan does not list your device."
+        }
+      },
+      "scan": {
+        "title": "Select Storz & Bickel Device",
+        "description": "Found {count} device(s). Select the device you want to add.",
+        "data": {
+          "device_address": "Device"
+        },
+        "data_description": {
+          "device_address": "Pick the MAC address of the vaporizer you want to control."
+        }
+      },
+      "manual": {
+        "title": "Enter MAC Address",
+        "description": "Enter the MAC address of your Storz & Bickel device.\n\nFormat: {format}",
+        "data": {
+          "device_address": "MAC Address",
+          "device_name": "Device Name (optional)"
+        },
+        "data_description": {
+          "device_address": "Use the same format as on the device label or your router’s Bluetooth client list (colons or dashes).",
+          "device_name": "A label shown in Home Assistant; discovery may replace it with the name from the device."
+        }
+      },
+      "bluetooth_confirm": {
+        "title": "Storz & Bickel Device Found",
+        "description": "Do you want to add {name}?"
+      },
+      "reconfigure": {
+        "title": "Update device name",
+        "description": "Change how this device is labeled in Home Assistant. The Bluetooth address does not change.",
+        "data": {
+          "device_name": "Device name"
+        },
+        "data_description": {
+          "device_name": "Shown on the device dashboard and in entity names (together with each entity label)."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "no_devices_found": "No devices found",
+      "scan_failed": "Failed to scan for devices",
+      "invalid_mac_address": "Invalid MAC address format",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured",
+      "bluetooth_not_available": "Bluetooth is not available. Please enable Bluetooth integration.",
+      "not_supported": "Device is not a supported Storz & Bickel device",
+      "reconfigure_successful": "Settings updated"
+    }
+  },
+  "issues": {
+    "no_connectable_bluetooth": {
+      "title": "No connectable Bluetooth adapter",
+      "description": "Home Assistant did not find a connectable Bluetooth scanner. Automatic scanning may not work until Bluetooth is set up (you can still try manual MAC entry)."
+    }
+  },
+  "entity": {
+    "climate": {
+      "temperature": {
+        "name": "Temperature"
+      }
+    },
+    "sensor": {
+      "current_temperature": {
+        "name": "Current temperature"
+      },
+      "battery": {
+        "name": "Battery"
+      }
+    },
+    "switch": {
+      "air_pump": {
+        "name": "Air pump"
+      },
+      "vibration": {
+        "name": "Vibration"
+      },
+      "boost_timeout_disabled": {
+        "name": "Boost timeout disabled"
+      }
+    },
+    "button": {
+      "boost_mode": {
+        "name": "Boost mode"
+      }
+    },
+    "number": {
+      "brightness": {
+        "name": "Brightness"
+      },
+      "boost_temperature": {
+        "name": "Boost temperature"
+      }
+    },
+    "select": {
+      "workflow_preset": {
+        "name": "Workflow preset"
+      }
+    }
+  }
+}

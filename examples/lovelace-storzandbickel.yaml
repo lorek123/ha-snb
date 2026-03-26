@@ -1,0 +1,95 @@
+# Storz & Bickel — example Lovelace dashboard
+#
+# How to use:
+# 1. Open Developer tools → States and find your entities (filter by domain:
+#    climate, sensor, switch, button, number, select).
+# 2. Replace every `my_device` below with your slug (the part after the last dot’s
+#    prefix matches: climate.<slug>_temperature, sensor.<slug>_current_temperature, …).
+#    Example: if climate entity is `climate.kitchen_venty_temperature`, use `kitchen_venty`.
+# 3. Remove card rows for entities your device does not expose (Volcano has no battery;
+#    Crafty has no brightness; etc.).
+#
+# Paste into a dashboard:
+# - Edit dashboard → ⋮ → Raw configuration editor (add to `views:`), or
+# - Add a “Manual” card and paste individual card YAML from the snippets at the bottom.
+
+views:
+  - title: Storz & Bickel
+    path: storzandbickel
+    icon: mdi:smoking
+    type: masonry
+    cards:
+      - type: thermostat
+        entity: climate.my_device_temperature
+
+      - type: entities
+        title: Status
+        state_color: true
+        entities:
+          - entity: sensor.my_device_current_temperature
+            name: Current temperature
+          - entity: sensor.my_device_battery
+            name: Battery
+
+      - type: entities
+        title: Quick controls
+        entities:
+          - entity: button.my_device_boost_mode
+            name: Boost
+          - entity: number.my_device_brightness
+          - entity: number.my_device_boost_temperature
+          - entity: select.my_device_workflow_preset
+          - entity: switch.my_device_air_pump
+          - entity: switch.my_device_vibration
+          - entity: switch.my_device_boost_timeout_disabled
+
+      - type: horizontal-stack
+        cards:
+          - type: button
+            name: Heat
+            icon: mdi:fire
+            tap_action:
+              action: call-service
+              service: climate.set_hvac_mode
+              target:
+                entity_id: climate.my_device_temperature
+              data:
+                hvac_mode: heat
+          - type: button
+            name: Off
+            icon: mdi:power
+            tap_action:
+              action: call-service
+              service: climate.set_hvac_mode
+              target:
+                entity_id: climate.my_device_temperature
+              data:
+                hvac_mode: "off"
+          - type: button
+            name: Boost
+            icon: mdi:rocket-launch
+            tap_action:
+              action: call-service
+              service: button.press
+              target:
+                entity_id: button.my_device_boost_mode
+
+# -----------------------------------------------------------------------------
+# Snippets — paste one card at a time (Manual card → Show code editor)
+
+# Minimal: climate only
+# type: thermostat
+# entity: climate.my_device_temperature
+
+# Gauge-style current temp (needs “Gauge card” or template; core History graph is simpler)
+# type: history-graph
+# entities:
+#   - entity: sensor.my_device_current_temperature
+# hours_to_show: 24
+# title: Temperature
+
+# type: history-graph
+# title: Temperature (24h)
+# hours_to_show: 24
+# entities:
+#   - entity: sensor.my_device_current_temperature
