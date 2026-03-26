@@ -37,3 +37,6 @@ ENV/
 
 # HACS
 .hacs.json
+
+# Local product notes (not part of the integration package)
+app-frontend-capabilities.md
