@@ -89,3 +89,29 @@ class TestCraftyBoostTemperatureNumber:
         await n.async_set_native_value(42)
         coordinator.async_request_refresh.assert_not_called()
 
+    def test_native_value_fallback_fields(self, hass: HomeAssistant, mock_entry):
+        """Read value from alternate upstream state field names."""
+        state = MagicMock(spec=DeviceState)
+        state.boost_temperature = None
+        state.boost_temp = None
+        state.boost_offset = 33
+        coordinator = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        coordinator.data = {"state": state, "device_type": DeviceType.CRAFTY}
+        n = CraftyBoostTemperatureNumber(coordinator)
+        assert n.native_value == 33.0
+
+    async def test_set_value_with_offset_method(self, hass: HomeAssistant, mock_entry):
+        """Use alternate upstream method name when present."""
+        state = MagicMock(spec=DeviceState)
+        state.boost_temperature = None
+        device = MagicMock()
+        device.set_boost_offset = AsyncMock()
+        coordinator = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        coordinator.device = device
+        coordinator.data = {"state": state, "device_type": DeviceType.CRAFTY}
+        coordinator.async_request_refresh = AsyncMock()
+        n = CraftyBoostTemperatureNumber(coordinator)
+        await n.async_set_native_value(47)
+        device.set_boost_offset.assert_called_once_with(47.0)
+        coordinator.async_request_refresh.assert_called_once()
+

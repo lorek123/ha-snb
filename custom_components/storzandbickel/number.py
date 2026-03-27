@@ -79,12 +79,29 @@ class CraftyBoostTemperatureNumber(StorzBickelEntity, NumberEntity):
     def native_value(self) -> float | None:
         if not self.coordinator.data or not self.coordinator.data.get("state"):
             return None
-        return getattr(self.coordinator.data["state"], "boost_temperature", None)
+        state = self.coordinator.data["state"]
+        for attr in ("boost_temperature", "boost_temp", "boost_offset"):
+            value = getattr(state, attr, None)
+            if isinstance(value, (int, float)):
+                return float(value)
+        return None
 
     async def async_set_native_value(self, value: float) -> None:
-        if self.coordinator.device and hasattr(
-            self.coordinator.device, "set_boost_temperature"
+        if not self.coordinator.device:
+            return
+
+        device = self.coordinator.device
+        device_dict = getattr(device, "__dict__", {})
+
+        # Compatibility with potential upstream method rename.
+        if "set_boost_offset" in device_dict or hasattr(type(device), "set_boost_offset"):
+            await device.set_boost_offset(float(value))
+            await self.coordinator.async_request_refresh()
+            return
+
+        if "set_boost_temperature" in device_dict or hasattr(
+            type(device), "set_boost_temperature"
         ):
-            await self.coordinator.device.set_boost_temperature(float(value))
+            await device.set_boost_temperature(float(value))
             await self.coordinator.async_request_refresh()
 
