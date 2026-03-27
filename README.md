@@ -164,22 +164,17 @@ This integration uses the [storzandbickel-ble](https://pypi.org/project/storzand
 
 ### Running Tests
 
-Install test dependencies:
+Use **uv** so dependencies match CI and Home Assistant can resolve `custom_components` from the repo (avoid `pip install -e .`, which can break loader discovery on Python 3.14+ setuptools editables):
 
 ```bash
-pip install -e ".[test]"
+uv sync --extra test --no-install-project
+PYTHONPATH=. uv run pytest
 ```
 
-Run tests:
+Coverage (same as CI):
 
 ```bash
-pytest
-```
-
-Run tests with coverage:
-
-```bash
-pytest --cov=custom_components/storzandbickel --cov-report=html
+PYTHONPATH=. uv run pytest --cov=custom_components/storzandbickel --cov-report=html
 ```
 
 ### Test Structure
