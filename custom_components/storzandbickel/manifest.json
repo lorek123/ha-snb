@@ -1,13 +1,19 @@
 {
   "domain": "storzandbickel",
   "name": "Storz & Bickel",
-  "after_dependencies": ["bluetooth"],
-  "codeowners": ["@lorek123"],
+  "after_dependencies": [
+    "bluetooth"
+  ],
+  "codeowners": [
+    "@lorek123"
+  ],
   "config_flow": true,
   "documentation": "https://github.com/lorek123/ha-snb",
   "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/lorek123/ha-snb/issues",
-  "requirements": ["storzandbickel-ble>=0.1.4"],
-  "version": "0.1.1"
+  "requirements": [
+    "storzandbickel-ble>=0.1.4"
+  ],
+  "version": "0.1.2"
 }

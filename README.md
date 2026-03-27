@@ -12,6 +12,7 @@ Home Assistant integration for controlling Storz & Bickel vaporizers (Volcano Hy
 - **Battery Monitoring**: Battery level sensor for portable devices (Crafty/Crafty+, Venty)
 - **Air Pump Control**: Switch for Volcano Hybrid air pump
 - **Boost Mode**: Button to activate boost mode on supported devices
+- **Connection Tools**: Reconnect and refresh buttons for quick recovery without reloading the integration
 - **Auto-Discovery**: Automatic device discovery via Bluetooth
 
 ## Supported Devices
@@ -20,6 +21,7 @@ Home Assistant integration for controlling Storz & Bickel vaporizers (Volcano Hy
 | -------------- | ------------------- | -------------- | ------- | -------- | ---------- |
 | Volcano Hybrid | ✅                   | ✅              | ❌       | ✅        | ❌          |
 | Venty          | ✅                   | ✅              | ✅       | ❌        | ✅          |
+| Veazy          | ✅                   | ✅              | ✅       | ❌        | ✅          |
 | Crafty/Crafty+ | ✅                   | ✅              | ✅       | ❌        | ✅          |
 
 ## Installation
@@ -69,13 +71,17 @@ After setup, the following entities will be created:
 
 ### Sensor Entities
 - **Current Temperature**: Current device temperature
-- **Battery Level**: Battery percentage (Crafty/Crafty+, Venty only)
+- **Battery Level**: Battery percentage (Crafty/Crafty+, Venty, Veazy)
+- **Connection State**: `connected` / `disconnected` diagnostic state
+- **Signal Strength**: BLE RSSI (when provided by the device library)
 
 ### Switch Entities
 - **Air Pump**: Control air pump (Volcano Hybrid only)
 
 ### Button Entities
 - **Boost Mode**: Activate boost mode (Crafty/Crafty+, Venty, Veazy)
+- **Reconnect**: Force a disconnect/connect cycle and immediate refresh
+- **Refresh**: Trigger an on-demand coordinator refresh
 
 ### Number Entities
 - **Brightness** (1–9): Venty, Veazy
@@ -130,6 +136,32 @@ sensor:
       venty_temp:
         friendly_name: "Venty Temperature"
         value_template: "{{ states('sensor.venty_current_temperature') }}°C"
+```
+
+### Volcano workflow (entity-only automation)
+
+```yaml
+script:
+  volcano_fill_bag:
+    alias: "Volcano fill bag"
+    sequence:
+      - action: climate.set_hvac_mode
+        target:
+          entity_id: climate.my_device_temperature
+        data:
+          hvac_mode: heat
+      - wait_template: >
+          {{ state_attr('climate.my_device_temperature', 'current_temperature') | float(0)
+             >= state_attr('climate.my_device_temperature', 'temperature') | float(0) }}
+        timeout: "00:10:00"
+        continue_on_timeout: true
+      - action: switch.turn_on
+        target:
+          entity_id: switch.my_device_air_pump
+      - delay: "00:00:40"
+      - action: switch.turn_off
+        target:
+          entity_id: switch.my_device_air_pump
 ```
 
 ## Example dashboard (Lovelace)

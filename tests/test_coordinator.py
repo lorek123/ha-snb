@@ -205,3 +205,32 @@ class TestStorzBickelDataUpdateCoordinator:
                 await coordinator._async_connect()
 
                 assert coordinator.device == mock_device
+
+    async def test_async_disconnect(self, hass: HomeAssistant, mock_entry, mock_device):
+        """Disconnect helper clears active device."""
+        coordinator = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        coordinator.device = mock_device
+        await coordinator.async_disconnect()
+        mock_device.disconnect.assert_called_once()
+        assert coordinator.device is None
+
+    async def test_async_connect_noop_when_connected(
+        self, hass: HomeAssistant, mock_entry, mock_device
+    ):
+        """Connect helper is a no-op when already connected."""
+        coordinator = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        coordinator.device = mock_device
+        with patch.object(coordinator, "_async_connect", new_callable=AsyncMock) as connect:
+            await coordinator.async_connect()
+            connect.assert_not_called()
+
+    async def test_async_reconnect(self, hass: HomeAssistant, mock_entry):
+        """Reconnect helper disconnects, connects and refreshes."""
+        coordinator = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        coordinator.async_disconnect = AsyncMock()
+        coordinator.async_connect = AsyncMock()
+        coordinator.async_request_refresh = AsyncMock()
+        await coordinator.async_reconnect()
+        coordinator.async_disconnect.assert_called_once()
+        coordinator.async_connect.assert_called_once()
+        coordinator.async_request_refresh.assert_called_once()

@@ -38,6 +38,7 @@ async def test_diagnostics_no_runtime(hass: HomeAssistant, diag_entry: MockConfi
     assert data["device_type"] == "venty"
     assert data["device_address_tail"] == "**:**:**:**:DD:EE:FF"
     assert data["coordinator_device_connected"] is False
+    assert data["connection_state"] == "disconnected"
     assert data["library_version"] is not None
 
 
@@ -85,14 +86,23 @@ async def test_diagnostics_unknown_lib_version(hass: HomeAssistant, diag_entry: 
 
 async def test_diagnostics_with_coordinator(hass: HomeAssistant, diag_entry: MockConfigEntry):
     coord = MagicMock()
-    coord.device = object()
+    device = MagicMock()
+    device.address = "AA:BB:CC:DD:EE:FF"
+    device.name = "Live"
+    device.device_type = "venty"
+    device.firmware_version = "1.2.3"
+    coord.device = device
     coord.last_update_success = True
     coord.last_exception = None
+    coord.data = {"state": MagicMock(rssi=-62, hours=5, minutes=12, battery_level=77)}
     diag_entry.runtime_data = StorzBickelRuntimeData(coordinator=coord)
 
     data = await async_get_config_entry_diagnostics(hass, diag_entry)
     assert data["coordinator_device_connected"] is True
+    assert data["connection_state"] == "connected"
     assert data["last_update_success"] is True
+    assert data["state_rssi"] == -62
+    assert data["device_address_tail_live"] == "**:**:**:**:DD:EE:FF"
 
 
 async def test_diagnostics_coordinator_with_exception(
@@ -102,6 +112,7 @@ async def test_diagnostics_coordinator_with_exception(
     coord.device = None
     coord.last_update_success = False
     coord.last_exception = RuntimeError("ble")
+    coord.data = None
     diag_entry.runtime_data = StorzBickelRuntimeData(coordinator=coord)
 
     data = await async_get_config_entry_diagnostics(hass, diag_entry)

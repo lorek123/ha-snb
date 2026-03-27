@@ -43,10 +43,10 @@ def _coord(hass: HomeAssistant, entry: MagicMock, device_type: DeviceType):
 @pytest.mark.parametrize(
     ("device_type", "expected_boost"),
     [
-        (DeviceType.VOLCANO, 0),
-        (DeviceType.VENTY, 1),
-        (DeviceType.VEAZY, 1),
-        (DeviceType.CRAFTY, 1),
+        (DeviceType.VOLCANO, 2),
+        (DeviceType.VENTY, 3),
+        (DeviceType.VEAZY, 3),
+        (DeviceType.CRAFTY, 3),
     ],
 )
 async def test_button_platform_entities(
@@ -108,10 +108,10 @@ async def test_select_platform(
 @pytest.mark.parametrize(
     ("device_type", "expected_entities"),
     [
-        (DeviceType.VOLCANO, 1),
-        (DeviceType.VENTY, 2),
-        (DeviceType.VEAZY, 2),
-        (DeviceType.CRAFTY, 2),
+        (DeviceType.VOLCANO, 3),
+        (DeviceType.VENTY, 4),
+        (DeviceType.VEAZY, 4),
+        (DeviceType.CRAFTY, 4),
     ],
 )
 async def test_sensor_platform(
@@ -120,7 +120,7 @@ async def test_sensor_platform(
     device_type: DeviceType,
     expected_entities: int,
 ):
-    """Always current temperature; battery on portable lines."""
+    """Always temp+connection+signal; battery on portable lines."""
     _coord(hass, flow_entry, device_type)
     added = MagicMock()
     await sensor.async_setup_entry(hass, flow_entry, added)

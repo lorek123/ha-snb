@@ -81,6 +81,12 @@
       },
       "battery": {
         "name": "Battery"
+      },
+      "connection_state": {
+        "name": "Connection state"
+      },
+      "signal_strength": {
+        "name": "Signal strength"
       }
     },
     "switch": {
@@ -97,6 +103,12 @@
     "button": {
       "boost_mode": {
         "name": "Boost mode"
+      },
+      "reconnect": {
+        "name": "Reconnect"
+      },
+      "refresh": {
+        "name": "Refresh"
       }
     },
     "number": {

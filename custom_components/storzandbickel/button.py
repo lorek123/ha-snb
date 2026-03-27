@@ -23,7 +23,10 @@ async def async_setup_entry(
     """Set up the button platform."""
     runtime: StorzBickelRuntimeData = entry.runtime_data
     coordinator = runtime.coordinator
-    entities: list[ButtonEntity] = []
+    entities: list[ButtonEntity] = [
+        ReconnectButton(coordinator),
+        RefreshButton(coordinator),
+    ]
 
     # Add boost mode button if device supports it
     dt = device_type_slug(coordinator.data.get("device_type")) if coordinator.data else None
@@ -47,3 +50,31 @@ class BoostModeButton(StorzBickelEntity, ButtonEntity):
         if self.coordinator.device and hasattr(self.coordinator.device, "activate_boost_mode"):
             await self.coordinator.device.activate_boost_mode()
             await self.coordinator.async_request_refresh()
+
+
+class ReconnectButton(StorzBickelEntity, ButtonEntity):
+    """Reconnect to the BLE device."""
+
+    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
+        """Initialize reconnect button."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_reconnect"
+        self._attr_translation_key = "reconnect"
+
+    async def async_press(self) -> None:
+        """Reconnect and refresh."""
+        await self.coordinator.async_reconnect()
+
+
+class RefreshButton(StorzBickelEntity, ButtonEntity):
+    """Request an immediate state refresh."""
+
+    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
+        """Initialize refresh button."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_refresh"
+        self._attr_translation_key = "refresh"
+
+    async def async_press(self) -> None:
+        """Request coordinator refresh."""
+        await self.coordinator.async_request_refresh()

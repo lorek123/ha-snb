@@ -14,7 +14,9 @@ from custom_components.storzandbickel.const import DOMAIN
 from custom_components.storzandbickel.coordinator import StorzBickelDataUpdateCoordinator
 from custom_components.storzandbickel.sensor import (
     BatteryLevelSensor,
+    ConnectionStateSensor,
     CurrentTemperatureSensor,
+    SignalStrengthSensor,
 )
 
 
@@ -109,4 +111,28 @@ class TestBatteryLevelSensor:
         del mock_device_state.battery_level
         sensor = BatteryLevelSensor(coordinator)
 
+        assert sensor.native_value is None
+
+
+class TestConnectionAndSignalSensors:
+    """Test diagnostic connection/signal sensors."""
+
+    def test_connection_state_connected(self, coordinator):
+        coordinator.device = MagicMock()
+        sensor = ConnectionStateSensor(coordinator)
+        assert sensor.native_value == "connected"
+
+    def test_connection_state_disconnected(self, coordinator):
+        coordinator.device = None
+        sensor = ConnectionStateSensor(coordinator)
+        assert sensor.native_value == "disconnected"
+
+    def test_signal_strength_value(self, coordinator, mock_device_state):
+        mock_device_state.rssi = -66
+        sensor = SignalStrengthSensor(coordinator)
+        assert sensor.native_value == -66
+
+    def test_signal_strength_none(self, coordinator, mock_device_state):
+        del mock_device_state.rssi
+        sensor = SignalStrengthSensor(coordinator)
         assert sensor.native_value is None

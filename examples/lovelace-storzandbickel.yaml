@@ -30,12 +30,18 @@ views:
             name: Current temperature
           - entity: sensor.my_device_battery
             name: Battery
+          - entity: sensor.my_device_connection_state
+            name: Connection
+          - entity: sensor.my_device_signal_strength
+            name: Signal (RSSI)
 
       - type: entities
         title: Quick controls
         entities:
           - entity: button.my_device_boost_mode
             name: Boost
+          - entity: button.my_device_reconnect
+          - entity: button.my_device_refresh
           - entity: number.my_device_brightness
           - entity: number.my_device_boost_temperature
           - entity: select.my_device_workflow_preset

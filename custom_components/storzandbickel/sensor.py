@@ -38,6 +38,8 @@ async def async_setup_entry(
 
     # Always add temperature sensor
     entities.append(CurrentTemperatureSensor(coordinator))
+    entities.append(ConnectionStateSensor(coordinator))
+    entities.append(SignalStrengthSensor(coordinator))
 
     # Add battery sensor if device supports it
     dt = device_type_slug(coordinator.data.get("device_type")) if coordinator.data else None
@@ -92,3 +94,33 @@ class BatteryLevelSensor(StorzBickelEntity, SensorEntity):
         if hasattr(state, "battery_level") and state.battery_level is not None:
             return state.battery_level
         return None
+
+
+class ConnectionStateSensor(StorzBickelEntity, SensorEntity):
+    """Connected/disconnected state from coordinator connection."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "connection_state"
+
+    @property
+    def native_value(self) -> str:
+        """Return connection state."""
+        return "connected" if self.coordinator.device is not None else "disconnected"
+
+
+class SignalStrengthSensor(StorzBickelEntity, SensorEntity):
+    """Signal strength if exposed by upstream state."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "signal_strength"
+    _attr_native_unit_of_measurement = "dBm"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def native_value(self) -> int | None:
+        """Return signal strength."""
+        if not self.coordinator.data or not self.coordinator.data.get("state"):
+            return None
+        state = self.coordinator.data["state"]
+        rssi = getattr(state, "rssi", None)
+        return rssi if isinstance(rssi, int) else None

@@ -100,6 +100,29 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug("Error connecting to device (repeated): %s", err)
             raise UpdateFailed(f"Error connecting to device: {err}") from err
 
+    async def async_connect(self) -> None:
+        """Ensure device connection is established."""
+        if self.device is not None:
+            return
+        async with self._connect_lock:
+            if self.device is None:
+                await self._async_connect()
+
+    async def async_disconnect(self) -> None:
+        """Disconnect active device connection."""
+        if self.device is None:
+            return
+        try:
+            await self.device.disconnect()
+        finally:
+            self.device = None
+
+    async def async_reconnect(self) -> None:
+        """Force reconnect to the device and refresh state."""
+        await self.async_disconnect()
+        await self.async_connect()
+        await self.async_request_refresh()
+
     async def async_shutdown(self) -> None:
         """Shutdown the coordinator."""
         if self.device:

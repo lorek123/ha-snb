@@ -79,3 +79,25 @@ class TestBoostModeButton:
 
         # Should not raise an error
         await button.async_press()
+
+
+class TestConnectionButtons:
+    """Test reconnect/refresh buttons."""
+
+    async def test_refresh_button(self, coordinator):
+        """Refresh button requests refresh."""
+        from custom_components.storzandbickel.button import RefreshButton
+
+        coordinator.async_request_refresh = AsyncMock()
+        button = RefreshButton(coordinator)
+        await button.async_press()
+        coordinator.async_request_refresh.assert_called_once()
+
+    async def test_reconnect_button(self, coordinator):
+        """Reconnect button triggers reconnect flow."""
+        from custom_components.storzandbickel.button import ReconnectButton
+
+        coordinator.async_reconnect = AsyncMock()
+        button = ReconnectButton(coordinator)
+        await button.async_press()
+        coordinator.async_reconnect.assert_called_once()

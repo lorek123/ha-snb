@@ -41,6 +41,7 @@ async def async_get_config_entry_diagnostics(
         "device_type": entry.data.get(CONF_DEVICE_TYPE),
         "device_address_tail": _redact_address(str(entry.data.get(CONF_DEVICE_ADDRESS, ""))),
         "library_version": lib_ver,
+        "connection_state": "disconnected",
     }
 
     runtime_data = getattr(entry, "runtime_data", None)
@@ -52,7 +53,27 @@ async def async_get_config_entry_diagnostics(
     coord = runtime.coordinator
     base["coordinator_device_connected"] = coord.device is not None
     base["last_update_success"] = coord.last_update_success
+    base["connection_state"] = "connected" if coord.device is not None else "disconnected"
     if coord.last_exception is not None:
         base["last_exception"] = repr(coord.last_exception)
+
+    device = coord.device
+    if device is not None:
+        for attr in ("name", "address", "device_type", "firmware_version", "ble_firmware_version", "serial_number"):
+            value = getattr(device, attr, None)
+            if value is not None:
+                if attr == "address":
+                    base["device_address_tail_live"] = _redact_address(str(value))
+                elif attr == "device_type":
+                    base["device_type_live"] = str(value)
+                else:
+                    base[attr] = str(value)
+
+    if coord.data and coord.data.get("state"):
+        state = coord.data["state"]
+        for attr in ("rssi", "hours", "minutes", "battery_level"):
+            value = getattr(state, attr, None)
+            if value is not None:
+                base[f"state_{attr}"] = value
 
     return base
