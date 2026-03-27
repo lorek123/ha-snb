@@ -1,7 +1,5 @@
 {
   "name": "Storz & Bickel",
   "render_readme": true,
-  "domains": ["climate", "sensor", "switch", "button"],
-  "iot_class": "Local Polling",
   "homeassistant": "2026.3.0"
 }

@@ -9,6 +9,7 @@ from storzandbickel_ble.models import DeviceState, DeviceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from custom_components.storzandbickel.const import DOMAIN
 from custom_components.storzandbickel.coordinator import StorzBickelDataUpdateCoordinator
@@ -78,6 +79,12 @@ class TestCurrentTemperatureSensor:
 
         assert sensor.native_value is None
 
+    def test_device_info_includes_mac_connection(self, coordinator):
+        """Device info should expose MAC for Device info panel."""
+        sensor = CurrentTemperatureSensor(coordinator)
+        info = sensor.device_info
+        assert info["connections"] == {(CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")}
+
 
 class TestBatteryLevelSensor:
     """Test the battery level sensor."""
@@ -136,3 +143,16 @@ class TestConnectionAndSignalSensors:
         del mock_device_state.rssi
         sensor = SignalStrengthSensor(coordinator)
         assert sensor.native_value is None
+
+    def test_device_info_includes_firmware_and_serial(self, coordinator):
+        """Firmware/serial should show up when device exposes them."""
+        coordinator.device = MagicMock(
+            firmware_version="1.2.3",
+            ble_firmware_version="2.0.0",
+            serial_number="SN123456",
+            address="AA:BB:CC:DD:EE:FF",
+        )
+        sensor = ConnectionStateSensor(coordinator)
+        info = sensor.device_info
+        assert info["sw_version"] == "1.2.3 (BLE 2.0.0)"
+        assert info["serial_number"] == "SN123456"

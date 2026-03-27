@@ -29,7 +29,7 @@
           "device_name": "Device Name (optional)"
         },
         "data_description": {
-          "device_address": "Use the same format as on the device label or your router’s Bluetooth client list (colons or dashes).",
+          "device_address": "Use the same format as on the device label or your router's Bluetooth client list (colons or dashes).",
           "device_name": "A label shown in Home Assistant; discovery may replace it with the name from the device."
         }
       },
