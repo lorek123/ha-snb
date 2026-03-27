@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        # Keep in sync with requires-python in pyproject.toml (Home Assistant 2026+ target).
+        python-version: ["3.14"]
 
     steps:
     - uses: actions/checkout@v4
