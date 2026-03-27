@@ -9,14 +9,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Runtime deps are only storzandbickel-ble; tests need HA + bluetooth models for fixtures.
 test = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.1.0",
-    "pytest-mock>=3.11.1",
-    "pyserial>=3.5",
     "pytest-homeassistant-custom-component>=0.13.320",
     "home-assistant-bluetooth>=1.13.0",
+]
+# Static typing (also installed in CI).
+dev = [
     "pyright>=1.1.390",
 ]
 

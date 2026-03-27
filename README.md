@@ -167,7 +167,7 @@ This integration uses the [storzandbickel-ble](https://pypi.org/project/storzand
 Use **uv** so dependencies match CI and Home Assistant can resolve `custom_components` from the repo (avoid `pip install -e .`, which can break loader discovery on Python 3.14+ setuptools editables):
 
 ```bash
-uv sync --extra test --no-install-project
+uv sync --extra test --extra dev --no-install-project
 PYTHONPATH=. uv run pytest
 ```
 
@@ -175,6 +175,14 @@ Coverage (same as CI):
 
 ```bash
 PYTHONPATH=. uv run pytest --cov=custom_components/storzandbickel --cov-report=html
+```
+
+PySerial is not used: HA’s `usb` import path is satisfied in tests by the `serial.*` stubs in `tests/conftest.py`.
+
+Typecheck (CI runs this after install):
+
+```bash
+uv run pyright custom_components/storzandbickel
 ```
 
 ### Test Structure
@@ -189,7 +197,7 @@ PYTHONPATH=. uv run pytest --cov=custom_components/storzandbickel --cov-report=h
 
 ### Quality scale / typing notes
 
-This repo targets common [Home Assistant integration quality scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/checklist) practices where they apply to a **HACS** integration. Core-only items (e.g. official branding repo) may not apply. **Inject websession** is not relevant (no HTTP client integration dependency). Strict typing is enforced incrementally via `pyright` (see `pyproject.toml`).
+This repo targets common [Home Assistant integration quality scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/checklist) practices where they apply to a **HACS** integration. Core-only items (e.g. official branding repo) may not apply. **Inject websession** is not relevant (no HTTP client integration dependency). Strict typing is checked with `pyright` in CI and via the `dev` dependency group in `pyproject.toml`.
 
 ## Disclaimer
 

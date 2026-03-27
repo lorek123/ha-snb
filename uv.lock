@@ -868,30 +868,28 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+dev = [
+    { name = "pyright" },
+]
 test = [
     { name = "home-assistant-bluetooth" },
-    { name = "pyright" },
-    { name = "pyserial" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "pytest-homeassistant-custom-component" },
-    { name = "pytest-mock" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "home-assistant-bluetooth", marker = "extra == 'test'", specifier = ">=1.13.0" },
-    { name = "pyright", marker = "extra == 'test'", specifier = ">=1.1.390" },
-    { name = "pyserial", marker = "extra == 'test'", specifier = ">=3.5" },
+    { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.390" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=7.4.0" },
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.21.0" },
     { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=4.1.0" },
     { name = "pytest-homeassistant-custom-component", marker = "extra == 'test'", specifier = ">=0.13.320" },
-    { name = "pytest-mock", marker = "extra == 'test'", specifier = ">=3.11.1" },
     { name = "storzandbickel-ble", specifier = ">=0.1.4" },
 ]
-provides-extras = ["test"]
+provides-extras = ["test", "dev"]
 
 [[package]]
 name = "habluetooth"
@@ -1722,15 +1720,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pyserial"
-version = "3.5"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/1e/7d/ae3f0a63f41e4d2f6cb66a5b57197850f919f59e558159a4dd3a818f5082/pyserial-3.5.tar.gz", hash = "sha256:3c77e014170dfffbd816e6ffc205e9842efb10be9f58ec16d3e8675b4925cddb", size = 159125, upload-time = "2020-11-23T03:59:15.045Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/07/bc/587a445451b253b285629263eb51c2d8e9bcea4fc97826266d186f96f558/pyserial-3.5-py2.py3-none-any.whl", hash = "sha256:c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0", size = 90585, upload-time = "2020-11-23T03:59:13.41Z" },
-]
-
-[[package]]
 name = "pytest"
 version = "9.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1846,18 +1835,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/b6/35/ffd0ef78505a76aaee01bee0d6386f5b41562389a7b25e99ed269759b25b/pytest_homeassistant_custom_component-0.13.320.tar.gz", hash = "sha256:d66d2693a561b690e929c2b211d7bd2f569c732ce1c31a87d607553c4ffde509", size = 65859, upload-time = "2026-03-25T05:31:24.592Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/dc/68/5129c4fb5cd8c4435b0be48404e7ac5c4970f1d4f2fa7b4de39aae6e2ef1/pytest_homeassistant_custom_component-0.13.320-py3-none-any.whl", hash = "sha256:d87157e5c6fcdac2bff70b1925467e15d4037107e334830d0fe4e83b3897038c", size = 71564, upload-time = "2026-03-25T05:31:23.255Z" },
-]
-
-[[package]]
-name = "pytest-mock"
-version = "3.15.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pytest" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/68/14/eb014d26be205d38ad5ad20d9a80f7d201472e08167f0bb4361e251084a9/pytest_mock-3.15.1.tar.gz", hash = "sha256:1849a238f6f396da19762269de72cb1814ab44416fa73a8686deac10b0d87a0f", size = 34036, upload-time = "2025-09-16T16:37:27.081Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/5a/cc/06253936f4a7fa2e0f48dfe6d851d9c56df896a9ab09ac019d70b760619c/pytest_mock-3.15.1-py3-none-any.whl", hash = "sha256:0a25e2eb88fe5168d535041d09a4529a188176ae608a6d249ee65abc0949630d", size = 10095, upload-time = "2025-09-16T16:37:25.734Z" },
 ]
 
 [[package]]

@@ -25,7 +25,10 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Install dependencies
-      run: uv sync --extra test --no-install-project
+      run: uv sync --extra test --extra dev --no-install-project
+
+    - name: Run pyright
+      run: uv run pyright custom_components/storzandbickel
 
     - name: Run tests
       env:
