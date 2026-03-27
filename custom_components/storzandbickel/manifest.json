@@ -1,9 +1,9 @@
 {
   "domain": "storzandbickel",
   "name": "Storz & Bickel",
+  "after_dependencies": ["bluetooth"],
   "codeowners": ["@lorek123"],
   "config_flow": true,
-  "after_dependencies": ["bluetooth"],
   "documentation": "https://github.com/lorek123/ha-snb",
   "integration_type": "device",
   "iot_class": "local_polling",
