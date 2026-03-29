@@ -8,6 +8,7 @@ from typing import Any
 
 from storzandbickel_ble import StorzBickelClient
 from storzandbickel_ble.models import DeviceType
+from storzandbickel_ble.protocol import CRAFTY_CHAR_BATTERY, VOLCANO_CHAR_CURRENT_TEMP
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,6 +19,11 @@ from .const import CONF_DEVICE_ADDRESS, CONF_DEVICE_NAME, CONF_DEVICE_TYPE, DOMA
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)
+
+# storzandbickel_ble Crafty/Volcano update_state() swallows most GATT errors, so a failed
+# poll can still return without raising and leave stale state — last_update_success stays True.
+UPDATE_STATE_TIMEOUT = 90.0
+LIVE_BLE_VERIFY_TIMEOUT = 25.0
 
 
 class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
@@ -38,6 +44,28 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
         self._connect_lock = asyncio.Lock()
         self._connect_error_logged = False
 
+    async def _async_verify_live_ble_link(self) -> None:
+        """Perform one strict GATT read so out-of-range / dead links fail the coordinator update.
+
+        Crafty and Volcano update_state() catch errors per-characteristic and only log them,
+        so update_state() can return while the device is unreachable. Venty-style devices
+        already raise from command timeouts and do not need this.
+        """
+        device = self.device
+        if device is None:
+            return
+        device_type = device.device_type
+        if device_type == DeviceType.CRAFTY:
+            char = CRAFTY_CHAR_BATTERY
+        elif device_type == DeviceType.VOLCANO:
+            char = VOLCANO_CHAR_CURRENT_TEMP
+        else:
+            return
+        await asyncio.wait_for(
+            device._read_characteristic(char),
+            timeout=LIVE_BLE_VERIFY_TIMEOUT,
+        )
+
     async def _async_update_data(self) -> dict:
         """Fetch data from the device."""
         if self.device is None:
@@ -49,7 +77,11 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("Device not connected")
 
         try:
-            await self.device.update_state()
+            await asyncio.wait_for(
+                self.device.update_state(),
+                timeout=UPDATE_STATE_TIMEOUT,
+            )
+            await self._async_verify_live_ble_link()
             if self._connect_error_logged:
                 _LOGGER.info(
                     "Connection restored to device %s",

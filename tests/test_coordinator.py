@@ -5,7 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from storzandbickel_ble import StorzBickelClient
+from storzandbickel_ble.exceptions import ConnectionError as SBleConnectionError
 from storzandbickel_ble.models import DeviceType
+from storzandbickel_ble.protocol import CRAFTY_CHAR_BATTERY, VOLCANO_CHAR_CURRENT_TEMP
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -101,6 +103,8 @@ class TestStorzBickelDataUpdateCoordinator:
                 mock_scan.return_value = [mock_device_info]
                 mock_connect.return_value = mock_device
 
+                mock_device._read_characteristic = AsyncMock(return_value=bytearray([80]))
+
                 data = await coordinator._async_update_data()
 
                 assert data["state"] == mock_device.state
@@ -108,6 +112,9 @@ class TestStorzBickelDataUpdateCoordinator:
                 assert data["name"] == mock_device.name
                 assert data["address"] == mock_device.address
                 mock_device.update_state.assert_called_once()
+                mock_device._read_characteristic.assert_awaited_once_with(
+                    CRAFTY_CHAR_BATTERY
+                )
 
     async def test_update_data_no_device(
         self, hass: HomeAssistant, mock_entry
@@ -141,6 +148,70 @@ class TestStorzBickelDataUpdateCoordinator:
 
                 # Device should be reset on error
                 assert coordinator.device is None
+
+    async def test_live_ble_verify_failure_resets_device(
+        self, hass: HomeAssistant, mock_entry, mock_device_info, mock_device
+    ):
+        """Strict post-update GATT read must fail the poll when the link is dead (Crafty)."""
+        coordinator = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+
+        with patch.object(StorzBickelClient, "scan", new_callable=AsyncMock) as mock_scan:
+            with patch.object(
+                StorzBickelClient, "connect_device", new_callable=AsyncMock
+            ) as mock_connect:
+                mock_scan.return_value = [mock_device_info]
+                mock_connect.return_value = mock_device
+                mock_device._read_characteristic = AsyncMock(
+                    side_effect=SBleConnectionError("not connected")
+                )
+
+                with pytest.raises(UpdateFailed, match="Error communicating"):
+                    await coordinator._async_update_data()
+
+                assert coordinator.device is None
+                mock_device._read_characteristic.assert_awaited_once_with(
+                    CRAFTY_CHAR_BATTERY
+                )
+
+    async def test_live_ble_verify_volcano_uses_current_temp(
+        self, hass: HomeAssistant, mock_entry, mock_device_info, mock_device
+    ):
+        """Volcano uses a strict read on current temperature after update_state."""
+        mock_device.device_type = DeviceType.VOLCANO
+        coordinator = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+
+        with patch.object(StorzBickelClient, "scan", new_callable=AsyncMock) as mock_scan:
+            with patch.object(
+                StorzBickelClient, "connect_device", new_callable=AsyncMock
+            ) as mock_connect:
+                mock_scan.return_value = [mock_device_info]
+                mock_connect.return_value = mock_device
+                mock_device._read_characteristic = AsyncMock(return_value=bytearray([1, 2]))
+
+                await coordinator._async_update_data()
+
+                mock_device._read_characteristic.assert_awaited_once_with(
+                    VOLCANO_CHAR_CURRENT_TEMP
+                )
+
+    async def test_live_ble_verify_skipped_for_venty(
+        self, hass: HomeAssistant, mock_entry, mock_device_info, mock_device
+    ):
+        """Venty update_state already surfaces errors; no extra verify read."""
+        mock_device.device_type = DeviceType.VENTY
+        mock_device._read_characteristic = AsyncMock()
+        coordinator = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+
+        with patch.object(StorzBickelClient, "scan", new_callable=AsyncMock) as mock_scan:
+            with patch.object(
+                StorzBickelClient, "connect_device", new_callable=AsyncMock
+            ) as mock_connect:
+                mock_scan.return_value = [mock_device_info]
+                mock_connect.return_value = mock_device
+
+                await coordinator._async_update_data()
+
+                assert mock_device._read_characteristic.await_count == 0
 
     async def test_shutdown(
         self, hass: HomeAssistant, mock_entry, mock_device_info, mock_device
