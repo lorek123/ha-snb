@@ -15,7 +15,7 @@ jobs:
         python-version: ["3.14"]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     # uv installs Python when needed; do not `pip install -e .` — editable installs
     # register custom_components on a setuptools path hook that is not a real directory,
