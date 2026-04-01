@@ -6,7 +6,9 @@ import logging
 from datetime import timedelta
 from typing import Any
 
+from bleak.exc import BleakError
 from storzandbickel_ble import StorzBickelClient
+from storzandbickel_ble import exceptions as sb_exc
 from storzandbickel_ble.models import DeviceType
 from storzandbickel_ble.protocol import CRAFTY_CHAR_BATTERY, VOLCANO_CHAR_CURRENT_TEMP
 
@@ -43,6 +45,14 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
         self._client: StorzBickelClient | None = None
         self._connect_lock = asyncio.Lock()
         self._connect_error_logged = False
+
+    def _log_expected_device_unavailable(self, err: BaseException) -> None:
+        """Log offline/out-of-range style failures quietly (normal for battery BLE)."""
+        if not self._connect_error_logged:
+            _LOGGER.debug("Device unavailable: %s", err)
+            self._connect_error_logged = True
+        else:
+            _LOGGER.debug("Device unavailable (repeated): %s", err)
 
     async def _async_verify_live_ble_link(self) -> None:
         """Perform one strict GATT read so out-of-range / dead links fail the coordinator update.
@@ -82,6 +92,19 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
                 timeout=UPDATE_STATE_TIMEOUT,
             )
             await self._async_verify_live_ble_link()
+            # Crafty/Volcano only: update_state() swallows per-read errors; a None temperature
+            # after a "successful" poll means no live reads — reconnect instead of stale UI.
+            state = self.device.state
+            if self.device.device_type in (DeviceType.CRAFTY, DeviceType.VOLCANO):
+                if getattr(state, "current_temperature", None) is None:
+                    _LOGGER.debug(
+                        "Device %s returned no temperature after update; forcing reconnect",
+                        self.device.name or self.entry.data[CONF_DEVICE_ADDRESS],
+                    )
+                    self.device = None
+                    raise UpdateFailed(
+                        "Stale BLE connection: temperature not populated after update_state()"
+                    )
             if self._connect_error_logged:
                 _LOGGER.info(
                     "Connection restored to device %s",
@@ -94,9 +117,23 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
                 "name": self.device.name,
                 "address": self.device.address,
             }
+        except UpdateFailed as err:
+            # Includes our own stale-connection / explicit coordinator failures.
+            self.device = None
+            self._log_expected_device_unavailable(err)
+            raise
+        except (
+            asyncio.TimeoutError,
+            TimeoutError,
+            ConnectionError,
+            sb_exc.StorzBickelError,
+            BleakError,
+        ) as err:
+            self.device = None
+            self._log_expected_device_unavailable(err)
+            raise UpdateFailed(f"Error communicating with device: {err}") from err
         except Exception as err:
-            _LOGGER.exception("Error updating device state: %s", err)
-            # Try to reconnect on error
+            _LOGGER.exception("Unexpected error updating device state: %s", err)
             self.device = None
             raise UpdateFailed(f"Error communicating with device: {err}") from err
 
@@ -123,13 +160,19 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
             self.device = await self._client.connect_device(device_info)
             self._connect_error_logged = False
             _LOGGER.info("Connected to device %s", self.device.name or address)
+        except UpdateFailed as err:
+            self.device = None
+            self._log_expected_device_unavailable(err)
+            raise
         except Exception as err:
             self.device = None
             if not self._connect_error_logged:
-                _LOGGER.warning("Error connecting to device: %s", err, exc_info=True)
+                _LOGGER.warning(
+                    "Unexpected error connecting to device: %s", err, exc_info=True
+                )
                 self._connect_error_logged = True
             else:
-                _LOGGER.debug("Error connecting to device (repeated): %s", err)
+                _LOGGER.debug("Unexpected error connecting to device (repeated): %s", err)
             raise UpdateFailed(f"Error connecting to device: {err}") from err
 
     async def async_connect(self) -> None:
