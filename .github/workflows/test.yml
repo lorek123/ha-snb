@@ -20,7 +20,7 @@ jobs:
     # uv installs Python when needed; do not `pip install -e .` — editable installs
     # register custom_components on a setuptools path hook that is not a real directory,
     # which breaks homeassistant.loader's Path(custom_components.__path__).iterdir().
-    - uses: astral-sh/setup-uv@v5
+    - uses: astral-sh/setup-uv@v7
       with:
         python-version: ${{ matrix.python-version }}
 
