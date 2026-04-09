@@ -1,0 +1,116 @@
+# Combines multiple open Dependabot PRs that already have green CI into a single
+# weekly PR against the default branch. Reduces review overhead while only
+# bundling PRs that pass checks (pending or failing PRs are left untouched).
+#
+# Configure: default branch must match the base used in your repo (default: main).
+name: Weekly Dependabot bundle
+
+on:
+  schedule:
+    # Mondays 07:15 UTC — adjust if you want a different weekly window
+    - cron: "15 7 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: dependabot-weekly-bundle
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Bundle passing Dependabot PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_BRANCH: main
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          existing_bundle="$(
+            gh pr list --repo "${{ github.repository }}" -B "${BASE_BRANCH}" -s open \
+              --json headRefName \
+              --jq 'map(select(.headRefName | test("^dependabot/weekly-bundle-"))) | length'
+          )"
+          if [[ "${existing_bundle:-0}" -gt 0 ]]; then
+            echo "An open PR from dependabot/weekly-bundle-* already exists; skipping."
+            exit 0
+          fi
+
+          raw="$(gh pr list --repo "${{ github.repository }}" -B "${BASE_BRANCH}" -s open \
+            --app dependabot -L 50 --json number,headRefName,title)"
+
+          mapfile -t nums < <(echo "$raw" | jq -r 'sort_by(.number) | .[].number')
+          if [[ ${#nums[@]} -eq 0 ]]; then
+            echo "No open Dependabot PRs; nothing to do."
+            exit 0
+          fi
+
+          green=()
+          for n in "${nums[@]}"; do
+            set +e
+            gh pr checks "$n" --repo "${{ github.repository }}" >/dev/null 2>&1
+            rc=$?
+            set -e
+            if [[ $rc -eq 0 ]]; then
+              green+=("$n")
+            elif [[ $rc -eq 8 ]]; then
+              echo "PR #${n}: checks still pending; skipping."
+            else
+              echo "PR #${n}: checks not all passing (exit ${rc}); skipping."
+            fi
+          done
+
+          if [[ ${#green[@]} -lt 2 ]]; then
+            echo "Fewer than two Dependabot PRs with all checks passing (${#green[@]}); no bundle created."
+            exit 0
+          fi
+
+          bundle_branch="dependabot/weekly-bundle-$(date -u +%Y%m%d)"
+          git checkout -b "${bundle_branch}" "origin/${BASE_BRANCH}"
+
+          body=$'Weekly rollup of Dependency updates (all included PRs had green CI when this branch was built).\n\n**Included PRs:**\n'
+          for n in "${green[@]}"; do
+            title="$(echo "$raw" | jq -r --argjson num "$n" '.[] | select(.number == $num) | .title')"
+            echo "Merging #${n}: ${title}"
+            head_ref="$(echo "$raw" | jq -r --argjson num "$n" '.[] | select(.number == $num) | .headRefName')"
+            git fetch origin "${head_ref}"
+            if ! git merge --no-ff "origin/${head_ref}" \
+              -m "chore(deps): merge dependency updates from #${n}"; then
+              echo "::error::Merge conflict while merging #${n} (${head_ref}). Resolve manually or adjust the bundle workflow."
+              git merge --abort || true
+              exit 1
+            fi
+            body+="- #${n} — ${title}"$'\n'
+          done
+
+          git push origin "${bundle_branch}"
+
+          title="chore(deps): weekly dependency bundle ($(date -u +%Y-%m-%d))"
+          gh pr create --repo "${{ github.repository }}" \
+            -B "${BASE_BRANCH}" \
+            -H "${bundle_branch}" \
+            --title "${title}" \
+            --body "${body}"
+
+          pr_num="$(
+            gh pr list --repo "${{ github.repository }}" -B "${BASE_BRANCH}" -H "${bundle_branch}" \
+              --json number --jq '.[0].number'
+          )"
+          for n in "${green[@]}"; do
+            gh pr close "$n" --repo "${{ github.repository }}" \
+              -c "Superseded by weekly bundle #${pr_num}."
+          done
