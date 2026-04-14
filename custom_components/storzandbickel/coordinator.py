@@ -3,15 +3,18 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from datetime import timedelta
 from typing import Any
 
 from bleak.exc import BleakError
 from storzandbickel_ble import StorzBickelClient
 from storzandbickel_ble import exceptions as sb_exc
+from storzandbickel_ble.models import DeviceInfo as SBDeviceInfo
 from storzandbickel_ble.models import DeviceType
 from storzandbickel_ble.protocol import CRAFTY_CHAR_BATTERY, VOLCANO_CHAR_CURRENT_TEMP
 
+from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -26,6 +29,19 @@ SCAN_INTERVAL = timedelta(seconds=5)
 # poll can still return without raising and leave stale state — last_update_success stays True.
 UPDATE_STATE_TIMEOUT = 90.0
 LIVE_BLE_VERIFY_TIMEOUT = 25.0
+
+# Backoff delays (seconds) applied between successive connection attempts when the device
+# is unavailable.  Keeps proxy traffic near zero while the Crafty is off or out of range.
+# Progression: 30 s → 60 s → 120 s (cap).
+_BACKOFF_DELAYS = (30, 60, 120)
+
+# Map config-entry device-type slugs → storzandbickel_ble DeviceType.
+_SLUG_TO_DEVICE_TYPE: dict[str, DeviceType] = {
+    "volcano": DeviceType.VOLCANO,
+    "venty": DeviceType.VENTY,
+    "crafty": DeviceType.CRAFTY,
+    "veazy": DeviceType.VEAZY,
+}
 
 
 class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
@@ -42,9 +58,36 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.entry = entry
         self.device: Any = None  # Concrete type from storzandbickel_ble (varies by device)
-        self._client: StorzBickelClient | None = None
         self._connect_lock = asyncio.Lock()
         self._connect_error_logged = False
+        # Backoff state: monotonic timestamp before which we skip connection attempts.
+        self._next_connect_attempt: float = 0.0
+        self._consecutive_connect_failures: int = 0
+
+    # ------------------------------------------------------------------
+    # Backoff helpers
+    # ------------------------------------------------------------------
+
+    def _schedule_backoff(self) -> None:
+        """Increase the back-off window after a failed connection attempt."""
+        idx = min(self._consecutive_connect_failures, len(_BACKOFF_DELAYS) - 1)
+        delay = _BACKOFF_DELAYS[idx]
+        self._consecutive_connect_failures += 1
+        self._next_connect_attempt = time.monotonic() + delay
+        _LOGGER.debug(
+            "Device unavailable; next connection attempt in %ds (attempt #%d)",
+            delay,
+            self._consecutive_connect_failures,
+        )
+
+    def _reset_backoff(self) -> None:
+        """Clear back-off state after a successful connection."""
+        self._consecutive_connect_failures = 0
+        self._next_connect_attempt = 0.0
+
+    # ------------------------------------------------------------------
+    # Internal update helpers
+    # ------------------------------------------------------------------
 
     def _log_expected_device_unavailable(self, err: BaseException) -> None:
         """Log offline/out-of-range style failures quietly (normal for battery BLE)."""
@@ -79,6 +122,10 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from the device."""
         if self.device is None:
+            # Honour backoff window — skip expensive connection attempt if we just failed.
+            if time.monotonic() < self._next_connect_attempt:
+                raise UpdateFailed("Device not in range (backing off)")
+
             async with self._connect_lock:
                 if self.device is None:
                     await self._async_connect()
@@ -138,34 +185,49 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error communicating with device: {err}") from err
 
     async def _async_connect(self) -> None:
-        """Connect to the device."""
-        try:
-            address = self.entry.data[CONF_DEVICE_ADDRESS]
-            # Normalize address for comparison (uppercase)
-            normalized_address = address.upper()
-            self._client = StorzBickelClient()
+        """Connect to the device using HA's passive BLE scanner cache.
 
-            # Scan and find the device (case-insensitive comparison)
-            devices = await self._client.scan(timeout=10.0)
-            device_info = next(
-                (d for d in devices if d.address.upper() == normalized_address), None
+        Instead of running an active 10-second BLE scan (which congests the ESPHome proxy
+        and interferes with other BLE devices), we query HA's already-running passive scanner.
+        This is an instant in-memory lookup that generates zero proxy traffic.  We only
+        attempt a GATT connection when HA has actually seen the device recently.
+        """
+        address = self.entry.data[CONF_DEVICE_ADDRESS].upper()
+
+        # Fast, zero-cost check: is the device currently visible to HA's BLE scanner?
+        ble_device = bluetooth.async_ble_device_from_address(
+            self.hass, address, connectable=True
+        )
+        if ble_device is None:
+            self._schedule_backoff()
+            self._log_expected_device_unavailable(
+                f"Device {address} not visible to HA bluetooth scanner (off or out of range)"
+            )
+            raise UpdateFailed(
+                f"Device {address} not in range"
             )
 
-            if not device_info:
-                raise UpdateFailed(
-                    f"Device {address} not found. Make sure the device is powered on and in range."
-                )
-
-            # Connect to the device
-            self.device = await self._client.connect_device(device_info)
+        # Device is visible — attempt GATT connection.
+        try:
+            slug = self.entry.data.get(CONF_DEVICE_TYPE, "crafty")
+            device_type = _SLUG_TO_DEVICE_TYPE.get(slug, DeviceType.CRAFTY)
+            device_info = SBDeviceInfo(
+                name=ble_device.name or self.entry.data.get(CONF_DEVICE_NAME, address),
+                address=address,
+                device_type=device_type,
+                ble_device=ble_device,
+            )
+            client = StorzBickelClient()
+            self.device = await client.connect_device(device_info)
+            self._reset_backoff()
             self._connect_error_logged = False
             _LOGGER.info("Connected to device %s", self.device.name or address)
-        except UpdateFailed as err:
-            self.device = None
-            self._log_expected_device_unavailable(err)
+        except UpdateFailed:
+            self._schedule_backoff()
             raise
         except Exception as err:
             self.device = None
+            self._schedule_backoff()
             if not self._connect_error_logged:
                 _LOGGER.warning(
                     "Unexpected error connecting to device: %s", err, exc_info=True
@@ -174,6 +236,10 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
             else:
                 _LOGGER.debug("Unexpected error connecting to device (repeated): %s", err)
             raise UpdateFailed(f"Error connecting to device: {err}") from err
+
+    # ------------------------------------------------------------------
+    # Public helpers
+    # ------------------------------------------------------------------
 
     async def async_connect(self) -> None:
         """Ensure device connection is established."""
@@ -194,6 +260,7 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_reconnect(self) -> None:
         """Force reconnect to the device and refresh state."""
+        self._reset_backoff()
         await self.async_disconnect()
         await self.async_connect()
         await self.async_request_refresh()
