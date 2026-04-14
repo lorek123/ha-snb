@@ -89,7 +89,7 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
     # Internal update helpers
     # ------------------------------------------------------------------
 
-    def _log_expected_device_unavailable(self, err: BaseException) -> None:
+    def _log_expected_device_unavailable(self, err: BaseException | str) -> None:
         """Log offline/out-of-range style failures quietly (normal for battery BLE)."""
         if not self._connect_error_logged:
             _LOGGER.debug("Device unavailable: %s", err)
