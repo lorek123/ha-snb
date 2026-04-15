@@ -1,11 +1,11 @@
 [project]
 name = "ha-snb"
-version = "0.1.7"
+version = "0.1.8"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14.2"
 dependencies = [
-    "storzandbickel-ble>=0.1.5",
+    "storzandbickel-ble>=0.1.6",
 ]
 
 [project.optional-dependencies]

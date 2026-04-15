@@ -13,7 +13,7 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/lorek123/ha-snb/issues",
   "requirements": [
-    "storzandbickel-ble>=0.1.5"
+    "storzandbickel-ble>=0.1.6"
   ],
-  "version": "0.1.7"
+  "version": "0.1.8"
 }
