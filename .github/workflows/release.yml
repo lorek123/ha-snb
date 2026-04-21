@@ -15,9 +15,9 @@ jobs:
 
       - name: Build release zip
         run: |
-          cd custom_components
-          zip -r ../storzandbickel.zip storzandbickel/ \
-            -x "*/__pycache__/*" "*.pyc"
+          cd custom_components/storzandbickel
+          zip -r ../../storzandbickel.zip . \
+            -x "*/__pycache__/*" "*.pyc" "./__pycache__"
 
       - name: Upload release asset
         env:
