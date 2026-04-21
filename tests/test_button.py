@@ -9,7 +9,7 @@ from storzandbickel_ble.models import DeviceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from custom_components.storzandbickel.button import BoostModeButton
+from custom_components.storzandbickel.button import BoostModeButton, FindDeviceButton
 from custom_components.storzandbickel.coordinator import StorzBickelDataUpdateCoordinator
 
 
@@ -101,3 +101,27 @@ class TestConnectionButtons:
         button = ReconnectButton(coordinator)
         await button.async_press()
         coordinator.async_reconnect.assert_called_once()
+
+
+class TestFindDeviceButton:
+    @pytest.fixture
+    def coord(self, hass, mock_entry):
+        from storzandbickel_ble.models import DeviceType
+        c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        c.data = {"state": MagicMock(), "device_type": DeviceType.CRAFTY}
+        c.device = MagicMock()
+        c.device.find_device = AsyncMock()
+        return c
+
+    def test_unique_id(self, coord):
+        assert FindDeviceButton(coord)._attr_unique_id == "test-entry_find_device"
+
+    async def test_press_calls_find_device(self, coord):
+        btn = FindDeviceButton(coord)
+        await btn.async_press()
+        coord.device.find_device.assert_called_once()
+
+    async def test_press_no_device(self, coord):
+        coord.device = None
+        btn = FindDeviceButton(coord)
+        await btn.async_press()  # should not raise

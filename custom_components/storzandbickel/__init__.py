@@ -12,12 +12,13 @@ from .coordinator import StorzBickelDataUpdateCoordinator
 from .data import StorzBickelRuntimeData
 
 PLATFORMS: list[Platform] = [
-    Platform.CLIMATE,
-    Platform.SENSOR,
-    Platform.SWITCH,
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 

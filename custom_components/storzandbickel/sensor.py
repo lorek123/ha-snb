@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -41,10 +41,13 @@ async def async_setup_entry(
     entities.append(ConnectionStateSensor(coordinator))
     entities.append(SignalStrengthSensor(coordinator))
 
-    # Add battery sensor if device supports it
     dt = device_type_slug(coordinator.data.get("device_type")) if coordinator.data else None
+
     if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(BatteryLevelSensor(coordinator))
+
+    if dt == DEVICE_TYPE_CRAFTY:
+        entities.append(UsageTimeSensor(coordinator))
 
     async_add_entities(entities)
 
@@ -94,6 +97,35 @@ class BatteryLevelSensor(StorzBickelEntity, SensorEntity):
         if hasattr(state, "battery_level") and state.battery_level is not None:
             return state.battery_level
         return None
+
+
+class UsageTimeSensor(StorzBickelEntity, SensorEntity):
+    """Total operating time for Crafty."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_native_unit_of_measurement = UnitOfTime.HOURS
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_device_class = SensorDeviceClass.DURATION
+
+    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_usage_time"
+        self._attr_translation_key = "usage_time"
+
+    @property
+    def native_value(self) -> int | None:
+        if not self.coordinator.data or not self.coordinator.data.get("state"):
+            return None
+        state = self.coordinator.data["state"]
+        hours = getattr(state, "usage_hours", None)
+        return hours if isinstance(hours, int) else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        if not self.coordinator.data or not self.coordinator.data.get("state"):
+            return {}
+        state = self.coordinator.data["state"]
+        return {"usage_minutes": getattr(state, "usage_minutes", 0)}
 
 
 class ConnectionStateSensor(StorzBickelEntity, SensorEntity):

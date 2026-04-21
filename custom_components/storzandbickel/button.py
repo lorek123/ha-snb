@@ -28,10 +28,10 @@ async def async_setup_entry(
         RefreshButton(coordinator),
     ]
 
-    # Add boost mode button if device supports it
     dt = device_type_slug(coordinator.data.get("device_type")) if coordinator.data else None
     if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(BoostModeButton(coordinator))
+        entities.append(FindDeviceButton(coordinator))
 
     async_add_entities(entities)
 
@@ -50,6 +50,19 @@ class BoostModeButton(StorzBickelEntity, ButtonEntity):
         if self.coordinator.device and hasattr(self.coordinator.device, "activate_boost_mode"):
             await self.coordinator.device.activate_boost_mode()
             await self.coordinator.async_request_refresh()
+
+
+class FindDeviceButton(StorzBickelEntity, ButtonEntity):
+    """Trigger find-device alert (vibration/LED)."""
+
+    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_find_device"
+        self._attr_translation_key = "find_device"
+
+    async def async_press(self) -> None:
+        if self.coordinator.device and hasattr(self.coordinator.device, "find_device"):
+            await self.coordinator.device.find_device()
 
 
 class ReconnectButton(StorzBickelEntity, ButtonEntity):

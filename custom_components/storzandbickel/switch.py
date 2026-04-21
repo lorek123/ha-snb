@@ -8,6 +8,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    DEVICE_TYPE_CRAFTY,
     DEVICE_TYPE_VOLCANO,
     DEVICE_TYPE_VENTY,
     DEVICE_TYPE_VEAZY,
@@ -37,10 +38,14 @@ async def async_setup_entry(
     if dt == DEVICE_TYPE_VOLCANO:
         entities.append(AirPumpSwitch(coordinator))
 
-    # Venty/Veazy settings switches
-    if dt in [DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
+    if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(VibrationSwitch(coordinator))
+
+    if dt in [DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(BoostTimeoutDisabledSwitch(coordinator))
+
+    if dt == DEVICE_TYPE_CRAFTY:
+        entities.append(SuperboostSwitch(coordinator))
 
     async_add_entities(entities)
 
@@ -113,6 +118,31 @@ class VibrationSwitch(StorzBickelEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs) -> None:
         if self.coordinator.device and hasattr(self.coordinator.device, "set_vibration"):
             await self.coordinator.device.set_vibration(False)
+            await self.coordinator.async_request_refresh()
+
+
+class SuperboostSwitch(StorzBickelEntity, SwitchEntity):
+    """Enable/disable superboost mode on Crafty."""
+
+    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_superboost"
+        self._attr_translation_key = "superboost"
+
+    @property
+    def is_on(self) -> bool:
+        if not self.coordinator.data or not self.coordinator.data.get("state"):
+            return False
+        return bool(getattr(self.coordinator.data["state"], "superboost_mode", False))
+
+    async def async_turn_on(self, **kwargs) -> None:
+        if self.coordinator.device and hasattr(self.coordinator.device, "set_superboost"):
+            await self.coordinator.device.set_superboost(True)
+            await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs) -> None:
+        if self.coordinator.device and hasattr(self.coordinator.device, "set_superboost"):
+            await self.coordinator.device.set_superboost(False)
             await self.coordinator.async_request_refresh()
 
 

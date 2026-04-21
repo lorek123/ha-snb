@@ -13,6 +13,7 @@ from custom_components.storzandbickel.coordinator import StorzBickelDataUpdateCo
 from custom_components.storzandbickel.switch import (
     AirPumpSwitch,
     BoostTimeoutDisabledSwitch,
+    SuperboostSwitch,
     VibrationSwitch,
 )
 
@@ -212,3 +213,42 @@ class TestBoostTimeoutDisabledSwitch:
         venty_coordinator.device.set_boost_timeout_disabled.assert_called_with(True)
         await sw.async_turn_off()
         venty_coordinator.device.set_boost_timeout_disabled.assert_called_with(False)
+
+
+class TestSuperboostSwitch:
+    @pytest.fixture
+    def coord(self, hass, mock_entry):
+        state = MagicMock(spec=DeviceState)
+        state.superboost_mode = False
+        c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        c.data = {"state": state, "device_type": DeviceType.CRAFTY}
+        c.device = MagicMock()
+        c.device.set_superboost = AsyncMock()
+        c.async_request_refresh = AsyncMock()
+        return c
+
+    def test_unique_id(self, coord):
+        assert SuperboostSwitch(coord)._attr_unique_id == "test-entry_superboost"
+
+    def test_is_off_default(self, coord):
+        assert SuperboostSwitch(coord).is_on is False
+
+    def test_is_on_when_active(self, coord):
+        coord.data["state"].superboost_mode = True
+        assert SuperboostSwitch(coord).is_on is True
+
+    async def test_turn_on(self, coord):
+        sw = SuperboostSwitch(coord)
+        await sw.async_turn_on()
+        coord.device.set_superboost.assert_called_once_with(True)
+        coord.async_request_refresh.assert_called_once()
+
+    async def test_turn_off(self, coord):
+        sw = SuperboostSwitch(coord)
+        await sw.async_turn_off()
+        coord.device.set_superboost.assert_called_once_with(False)
+        coord.async_request_refresh.assert_called_once()
+
+    def test_no_data(self, coord):
+        coord.data = None
+        assert SuperboostSwitch(coord).is_on is False

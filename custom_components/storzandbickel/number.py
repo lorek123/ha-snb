@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VEAZY, DEVICE_TYPE_VENTY, DOMAIN, device_type_slug
@@ -34,6 +34,8 @@ async def async_setup_entry(
 
     if dt == DEVICE_TYPE_CRAFTY:
         entities.append(CraftyBoostTemperatureNumber(coordinator))
+        entities.append(CraftyLedBrightnessNumber(coordinator))
+        entities.append(CraftyAutoOffNumber(coordinator))
 
     async_add_entities(entities)
 
@@ -89,19 +91,60 @@ class CraftyBoostTemperatureNumber(StorzBickelEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         if not self.coordinator.device:
             return
-
         device = self.coordinator.device
-        device_dict = getattr(device, "__dict__", {})
-
-        # Compatibility with potential upstream method rename.
-        if "set_boost_offset" in device_dict or hasattr(type(device), "set_boost_offset"):
-            await device.set_boost_offset(float(value))
-            await self.coordinator.async_request_refresh()
-            return
-
-        if "set_boost_temperature" in device_dict or hasattr(
-            type(device), "set_boost_temperature"
-        ):
+        if hasattr(device, "set_boost_temperature"):
             await device.set_boost_temperature(float(value))
+            await self.coordinator.async_request_refresh()
+
+
+class CraftyLedBrightnessNumber(StorzBickelEntity, NumberEntity):
+    """Crafty LED brightness (0-100)."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value = 0
+    _attr_native_max_value = 100
+    _attr_native_step = 1
+    _attr_mode = NumberMode.SLIDER
+
+    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_led_brightness"
+        self._attr_translation_key = "led_brightness"
+
+    @property
+    def native_value(self) -> float | None:
+        if not self.coordinator.data or not self.coordinator.data.get("state"):
+            return None
+        return getattr(self.coordinator.data["state"], "led_brightness", None)
+
+    async def async_set_native_value(self, value: float) -> None:
+        if self.coordinator.device and hasattr(self.coordinator.device, "set_led_brightness"):
+            await self.coordinator.device.set_led_brightness(int(value))
+            await self.coordinator.async_request_refresh()
+
+
+class CraftyAutoOffNumber(StorzBickelEntity, NumberEntity):
+    """Crafty auto-off time in seconds (0 = disabled)."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value = 0
+    _attr_native_max_value = 3600
+    _attr_native_step = 30
+    _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+
+    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_auto_off_time"
+        self._attr_translation_key = "auto_off_time"
+
+    @property
+    def native_value(self) -> float | None:
+        if not self.coordinator.data or not self.coordinator.data.get("state"):
+            return None
+        return getattr(self.coordinator.data["state"], "auto_off_time", None)
+
+    async def async_set_native_value(self, value: float) -> None:
+        if self.coordinator.device and hasattr(self.coordinator.device, "set_auto_off_time"):
+            await self.coordinator.device.set_auto_off_time(int(value))
             await self.coordinator.async_request_refresh()
 

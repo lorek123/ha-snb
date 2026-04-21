@@ -18,6 +18,7 @@ from custom_components.storzandbickel.sensor import (
     ConnectionStateSensor,
     CurrentTemperatureSensor,
     SignalStrengthSensor,
+    UsageTimeSensor,
 )
 
 
@@ -156,3 +157,28 @@ class TestConnectionAndSignalSensors:
         info = sensor.device_info
         assert info["sw_version"] == "1.2.3 (BLE 2.0.0)"
         assert info["serial_number"] == "SN123456"
+
+
+class TestUsageTimeSensor:
+    def test_unique_id(self, coordinator):
+        assert UsageTimeSensor(coordinator)._attr_unique_id == "test-entry_usage_time"
+
+    def test_native_value(self, coordinator, mock_device_state):
+        mock_device_state.usage_hours = 42
+        mock_device_state.usage_minutes = 30
+        sensor = UsageTimeSensor(coordinator)
+        assert sensor.native_value == 42
+
+    def test_extra_attributes(self, coordinator, mock_device_state):
+        mock_device_state.usage_hours = 10
+        mock_device_state.usage_minutes = 15
+        sensor = UsageTimeSensor(coordinator)
+        assert sensor.extra_state_attributes == {"usage_minutes": 15}
+
+    def test_native_value_none(self, coordinator):
+        coordinator.data = None
+        assert UsageTimeSensor(coordinator).native_value is None
+
+    def test_extra_attributes_no_data(self, coordinator):
+        coordinator.data = None
+        assert UsageTimeSensor(coordinator).extra_state_attributes == {}

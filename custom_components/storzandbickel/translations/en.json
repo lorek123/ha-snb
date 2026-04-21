@@ -70,6 +70,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "charging": {
+        "name": "Charging"
+      }
+    },
     "climate": {
       "temperature": {
         "name": "Temperature"
@@ -87,6 +92,9 @@
       },
       "signal_strength": {
         "name": "Signal strength"
+      },
+      "usage_time": {
+        "name": "Operating time"
       }
     },
     "switch": {
@@ -96,6 +104,9 @@
       "vibration": {
         "name": "Vibration"
       },
+      "superboost": {
+        "name": "Superboost"
+      },
       "boost_timeout_disabled": {
         "name": "Boost timeout disabled"
       }
@@ -103,6 +114,9 @@
     "button": {
       "boost_mode": {
         "name": "Boost mode"
+      },
+      "find_device": {
+        "name": "Find device"
       },
       "reconnect": {
         "name": "Reconnect"
@@ -117,6 +131,12 @@
       },
       "boost_temperature": {
         "name": "Boost temperature"
+      },
+      "led_brightness": {
+        "name": "LED brightness"
+      },
+      "auto_off_time": {
+        "name": "Auto-off time"
       }
     },
     "select": {

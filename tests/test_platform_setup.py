@@ -9,7 +9,7 @@ from storzandbickel_ble.models import DeviceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from custom_components.storzandbickel import button, climate, number, select, sensor, switch
+from custom_components.storzandbickel import binary_sensor, button, climate, number, select, sensor, switch
 from custom_components.storzandbickel.const import (
     CONF_DEVICE_ADDRESS,
     CONF_DEVICE_NAME,
@@ -44,9 +44,9 @@ def _coord(hass: HomeAssistant, entry: MagicMock, device_type: DeviceType):
     ("device_type", "expected_boost"),
     [
         (DeviceType.VOLCANO, 2),
-        (DeviceType.VENTY, 3),
-        (DeviceType.VEAZY, 3),
-        (DeviceType.CRAFTY, 3),
+        (DeviceType.VENTY, 4),
+        (DeviceType.VEAZY, 4),
+        (DeviceType.CRAFTY, 4),
     ],
 )
 async def test_button_platform_entities(
@@ -56,6 +56,23 @@ async def test_button_platform_entities(
     added = MagicMock()
     await button.async_setup_entry(hass, flow_entry, added)
     assert len(added.call_args[0][0]) == expected_boost
+
+
+@pytest.mark.parametrize(
+    ("device_type", "expected"),
+    [
+        (DeviceType.CRAFTY, 1),
+        (DeviceType.VOLCANO, 0),
+        (DeviceType.VENTY, 0),
+    ],
+)
+async def test_binary_sensor_platform(
+    hass: HomeAssistant, flow_entry: MagicMock, device_type: DeviceType, expected: int
+):
+    _coord(hass, flow_entry, device_type)
+    added = MagicMock()
+    await binary_sensor.async_setup_entry(hass, flow_entry, added)
+    assert len(added.call_args[0][0]) == expected
 
 
 async def test_climate_platform_adds_one(hass: HomeAssistant, flow_entry: MagicMock):
@@ -71,7 +88,7 @@ async def test_climate_platform_adds_one(hass: HomeAssistant, flow_entry: MagicM
         (DeviceType.VOLCANO, 0),
         (DeviceType.VENTY, 1),
         (DeviceType.VEAZY, 1),
-        (DeviceType.CRAFTY, 1),
+        (DeviceType.CRAFTY, 3),
     ],
 )
 async def test_number_platform(
@@ -111,7 +128,7 @@ async def test_select_platform(
         (DeviceType.VOLCANO, 3),
         (DeviceType.VENTY, 4),
         (DeviceType.VEAZY, 4),
-        (DeviceType.CRAFTY, 4),
+        (DeviceType.CRAFTY, 5),
     ],
 )
 async def test_sensor_platform(
@@ -133,7 +150,7 @@ async def test_sensor_platform(
         (DeviceType.VOLCANO, 1),
         (DeviceType.VENTY, 2),
         (DeviceType.VEAZY, 2),
-        (DeviceType.CRAFTY, 0),
+        (DeviceType.CRAFTY, 2),
     ],
 )
 async def test_switch_platform(
