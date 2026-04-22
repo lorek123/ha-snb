@@ -125,7 +125,7 @@ async def test_select_platform(
 @pytest.mark.parametrize(
     ("device_type", "expected_entities"),
     [
-        (DeviceType.VOLCANO, 3),
+        (DeviceType.VOLCANO, 4),
         (DeviceType.VENTY, 4),
         (DeviceType.VEAZY, 4),
         (DeviceType.CRAFTY, 5),

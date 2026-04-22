@@ -182,3 +182,11 @@ class TestUsageTimeSensor:
     def test_extra_attributes_no_data(self, coordinator):
         coordinator.data = None
         assert UsageTimeSensor(coordinator).extra_state_attributes == {}
+
+    def test_volcano_heating_hours(self, coordinator, mock_device_state):
+        del mock_device_state.usage_hours
+        mock_device_state.heating_hours = 100
+        mock_device_state.heating_minutes = 45
+        sensor = UsageTimeSensor(coordinator)
+        assert sensor.native_value == 100
+        assert sensor.extra_state_attributes == {"usage_minutes": 45}

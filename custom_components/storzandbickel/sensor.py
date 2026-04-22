@@ -16,6 +16,7 @@ from .const import (
     DEVICE_TYPE_CRAFTY,
     DEVICE_TYPE_VEAZY,
     DEVICE_TYPE_VENTY,
+    DEVICE_TYPE_VOLCANO,
     DOMAIN,
     device_type_slug,
 )
@@ -46,7 +47,7 @@ async def async_setup_entry(
     if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(BatteryLevelSensor(coordinator))
 
-    if dt == DEVICE_TYPE_CRAFTY:
+    if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VOLCANO]:
         entities.append(UsageTimeSensor(coordinator))
 
     async_add_entities(entities)
@@ -117,7 +118,8 @@ class UsageTimeSensor(StorzBickelEntity, SensorEntity):
         if not self.coordinator.data or not self.coordinator.data.get("state"):
             return None
         state = self.coordinator.data["state"]
-        hours = getattr(state, "usage_hours", None)
+        # Crafty uses usage_hours; Volcano uses heating_hours
+        hours = getattr(state, "usage_hours", None) or getattr(state, "heating_hours", None)
         return hours if isinstance(hours, int) else None
 
     @property
@@ -125,7 +127,8 @@ class UsageTimeSensor(StorzBickelEntity, SensorEntity):
         if not self.coordinator.data or not self.coordinator.data.get("state"):
             return {}
         state = self.coordinator.data["state"]
-        return {"usage_minutes": getattr(state, "usage_minutes", 0)}
+        minutes = getattr(state, "usage_minutes", None) or getattr(state, "heating_minutes", None)
+        return {"usage_minutes": minutes or 0}
 
 
 class ConnectionStateSensor(StorzBickelEntity, SensorEntity):
