@@ -19,7 +19,7 @@ test = [
 ]
 # Static typing (also installed in CI).
 dev = [
-    "pyright>=1.1.390",
+    "pyright>=1.1.409",
 ]
 
 [tool.pyright]
