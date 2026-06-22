@@ -18,6 +18,14 @@ if "aiousbwatcher" not in sys.modules:
     mock_aiousbwatcher.InotifyNotAvailableError = Exception
     sys.modules["aiousbwatcher"] = mock_aiousbwatcher
 
+# Mock aioesphomeapi before serialx imports it (serialx.platforms.serial_esphome
+# unconditionally imports APIClient, which is only available with ESPHome installed)
+if "aioesphomeapi" not in sys.modules:
+    sys.modules["aioesphomeapi"] = MagicMock()
+    sys.modules["aioesphomeapi.client"] = MagicMock()
+    sys.modules["aioesphomeapi.core"] = MagicMock()
+    sys.modules["aioesphomeapi.model"] = MagicMock()
+
 # Minimal PySerial package layout before homeassistant.components.usb imports
 # `from serial.tools.list_ports_common import ListPortInfo`.
 if "serial" not in sys.modules:
@@ -70,6 +78,19 @@ async def enable_storzandbickel_custom_integrations(
     enable_custom_integrations,
 ) -> None:
     """Allow Home Assistant to load custom integrations from the test config directory."""
+
+
+@pytest.fixture(autouse=True)
+def mock_coordinator_async_request_refresh(monkeypatch):
+    """Prevent DataUpdateCoordinator debounce timers from lingering after tests.
+
+    HA 2026.6 added strict checks for lingering timers. async_request_refresh
+    schedules a debounce timer that outlives the test unless replaced here.
+    Tests that explicitly need to assert on this method override it at the
+    instance level, which takes precedence over this class-level patch.
+    """
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+    monkeypatch.setattr(DataUpdateCoordinator, "async_request_refresh", AsyncMock())
 
 
 @pytest.fixture
