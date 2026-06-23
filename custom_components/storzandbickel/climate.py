@@ -10,6 +10,8 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from storzandbickel_ble.models import HeaterMode, VentyState
+
 from .data import StorzBickelRuntimeData
 from .coordinator import StorzBickelDataUpdateCoordinator
 from .entity import StorzBickelEntity
@@ -71,9 +73,9 @@ class StorzBickelClimateEntity(StorzBickelEntity, ClimateEntity):
         if not self.coordinator.data or not self.coordinator.data.get("state"):
             return HVACMode.OFF
         state = self.coordinator.data["state"]
-        if state.heater_on:
-            return HVACMode.HEAT
-        return HVACMode.OFF
+        if isinstance(state, VentyState):
+            return HVACMode.HEAT if state.heater_mode != HeaterMode.OFF else HVACMode.OFF
+        return HVACMode.HEAT if state.heater_on else HVACMode.OFF
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

@@ -4,7 +4,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from storzandbickel_ble.models import DeviceState, DeviceType
+from storzandbickel_ble.models import DeviceState, DeviceType, HeaterMode, VentyState
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigEntry
@@ -169,3 +169,35 @@ class TestStorzBickelClimateEntity:
 
         # Should not raise an error
         await entity.async_set_hvac_mode(HVACMode.HEAT)
+
+
+class TestStorzBickelClimateEntityVenty:
+    """Tests for climate entity with a VentyState (heater_mode, not heater_on)."""
+
+    @pytest.fixture
+    def venty_coordinator(self, hass: HomeAssistant, mock_entry):
+        coordinator = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        state = VentyState()
+        coordinator.data = {
+            "state": state,
+            "device_type": DeviceType.VENTY,
+            "name": "Venty",
+            "address": "AA:BB:CC:DD:EE:FF",
+        }
+        coordinator.device = AsyncMock()
+        return coordinator
+
+    def test_hvac_mode_off_when_heater_mode_off(self, venty_coordinator):
+        entity = StorzBickelClimateEntity(venty_coordinator)
+        venty_coordinator.data["state"].heater_mode = HeaterMode.OFF
+        assert entity.hvac_mode == HVACMode.OFF
+
+    def test_hvac_mode_heat_when_heater_mode_normal(self, venty_coordinator):
+        entity = StorzBickelClimateEntity(venty_coordinator)
+        venty_coordinator.data["state"].heater_mode = HeaterMode.NORMAL
+        assert entity.hvac_mode == HVACMode.HEAT
+
+    def test_hvac_mode_heat_when_heater_mode_boost(self, venty_coordinator):
+        entity = StorzBickelClimateEntity(venty_coordinator)
+        venty_coordinator.data["state"].heater_mode = HeaterMode.BOOST
+        assert entity.hvac_mode == HVACMode.HEAT
