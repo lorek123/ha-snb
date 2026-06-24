@@ -1,15 +1,20 @@
 name: Release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  build:
+  release:
+    name: Build and release
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
     steps:
       - uses: actions/checkout@v7
 
@@ -19,9 +24,12 @@ jobs:
           zip -r ../../storzandbickel.zip . \
             -x "*/__pycache__/*" "*.pyc" "./__pycache__"
 
-      - name: Upload release asset
+      - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "${{ github.event.release.tag_name }}" \
-            storzandbickel.zip --clobber
+          gh release create "${{ github.ref_name }}" \
+            --title "Release ${{ github.ref_name }}" \
+            --generate-notes \
+            --repo "${{ github.repository }}" \
+            storzandbickel.zip
