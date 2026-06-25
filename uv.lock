@@ -954,7 +954,7 @@ wheels = [
 
 [[package]]
 name = "ha-snb"
-version = "0.1.14"
+version = "0.1.15"
 source = { virtual = "." }
 dependencies = [
     { name = "storzandbickel-ble" },
@@ -982,7 +982,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=7.1.0" },
     { name = "pytest-homeassistant-custom-component", marker = "extra == 'test'", specifier = ">=0.13.339" },
     { name = "serialx", marker = "extra == 'test'", specifier = "==1.8.0" },
-    { name = "storzandbickel-ble", specifier = ">=0.1.8" },
+    { name = "storzandbickel-ble", specifier = ">=0.1.9" },
 ]
 provides-extras = ["test", "dev"]
 
@@ -2313,16 +2313,16 @@ wheels = [
 
 [[package]]
 name = "storzandbickel-ble"
-version = "0.1.8"
+version = "0.1.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "bleak" },
     { name = "bleak-retry-connector" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/31/5a/89a14d198fe5a09fb0a2f1751abd8ca6b0d21a7158c525d412c08dea41bd/storzandbickel_ble-0.1.8.tar.gz", hash = "sha256:3a2a0e3a56b0de133af42db399bb9b7312bef01c8b00c28fe32dbb0e93dca77b", size = 100748, upload-time = "2026-06-24T13:46:43.935Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/03/9e/36a89efc3285a82680487abe1f5cf54c8fb9fda20f21a5394f267598287f/storzandbickel_ble-0.1.9.tar.gz", hash = "sha256:f3fe2b142ff9a74fb084e6c454040e5386f8f110190fd843d0070f9c99eabc62", size = 100761, upload-time = "2026-06-25T22:30:16.987Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d2/d4/3ac9570034e25402febe79aefc965e6d03d4a4924e0c7a0a531f8a0dfa67/storzandbickel_ble-0.1.8-py3-none-any.whl", hash = "sha256:5e9ef64b36b66d279493d3ff1740fc19f5f65033c722b807f52f6eafce61136e", size = 33424, upload-time = "2026-06-24T13:46:42.929Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/de/105a69754e2d1dea5e5128a30358a2bc01f2c0be94d4c73a8b1843060a6c/storzandbickel_ble-0.1.9-py3-none-any.whl", hash = "sha256:ce239c1c21383e74a2d8f3c6b1123c479741ebab9764c51172a5224ef703eb66", size = 33412, upload-time = "2026-06-25T22:30:15.972Z" },
 ]
 
 [[package]]
