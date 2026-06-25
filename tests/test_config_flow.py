@@ -99,9 +99,10 @@ class TestConfigFlow:
         self, hass: HomeAssistant, mock_bluetooth_scanner
     ):
         """Test scan step when no devices are found."""
-        with patch.object(StorzBickelClient, "scan", new_callable=AsyncMock) as mock_scan:
-            mock_scan.return_value = []
-
+        with patch(
+            "homeassistant.components.bluetooth.async_discovered_service_info",
+            return_value=[],
+        ):
             result = await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_USER}
             )
@@ -114,15 +115,17 @@ class TestConfigFlow:
             assert result["errors"]["base"] == "no_devices_found"
 
     async def test_scan_step_device_found(
-        self, hass: HomeAssistant, mock_bluetooth_scanner, mock_device_info
+        self, hass: HomeAssistant, mock_bluetooth_scanner
     ):
         """Test scan step when device is found."""
-        with patch.object(StorzBickelClient, "scan", new_callable=AsyncMock) as mock_scan:
-            mock_device_info.address = "AA:BB:CC:DD:EE:FF"
-            mock_device_info.name = "Test Device"
-            mock_device_info.device_type = DeviceType.CRAFTY
-            mock_scan.return_value = [mock_device_info]
+        mock_service_info = MagicMock()
+        mock_service_info.address = "AA:BB:CC:DD:EE:FF"
+        mock_service_info.name = "CRAFTY+"
 
+        with patch(
+            "homeassistant.components.bluetooth.async_discovered_service_info",
+            return_value=[mock_service_info],
+        ):
             result = await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_USER}
             )
@@ -141,34 +144,8 @@ class TestConfigFlow:
 
             assert result["type"] == FlowResultType.CREATE_ENTRY
             assert result["data"][CONF_DEVICE_ADDRESS] == "AA:BB:CC:DD:EE:FF"
-            assert result["data"][CONF_DEVICE_NAME] == "Test Device"
+            assert result["data"][CONF_DEVICE_NAME] == "CRAFTY+"
             assert result["data"][CONF_DEVICE_TYPE] == "crafty"
-
-    async def test_scan_step_validation_device_lost(
-        self, hass: HomeAssistant, mock_bluetooth_scanner, mock_device_info
-    ):
-        """Device listed then not found on re-scan during submit."""
-        with patch.object(StorzBickelClient, "scan", new_callable=AsyncMock) as mock_scan:
-            mock_device_info.address = "AA:BB:CC:DD:EE:FF"
-            mock_device_info.name = "Test Device"
-            mock_device_info.device_type = DeviceType.CRAFTY
-            mock_scan.side_effect = [
-                [mock_device_info],
-                [],
-            ]
-
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {"setup_method": "scan"}
-            )
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_DEVICE_ADDRESS: "AA:BB:CC:DD:EE:FF"}
-            )
-
-            assert result["type"] == FlowResultType.FORM
-            assert "Device not found" in result["errors"]["base"]
 
     async def test_manual_step_invalid_mac(
         self, hass: HomeAssistant, mock_bluetooth_scanner
@@ -337,28 +314,30 @@ class TestConfigFlow:
             assert result["reason"] == "not_supported"
 
     async def test_duplicate_entry(
-        self, hass: HomeAssistant, mock_bluetooth_scanner, mock_device_info
+        self, hass: HomeAssistant, mock_bluetooth_scanner
     ):
         """Test that duplicate entries are aborted."""
         entry = MockConfigEntry(
             domain=DOMAIN,
-            title="Test Device",
+            title="CRAFTY+",
             unique_id="AA:BB:CC:DD:EE:FF",
             entry_id="test-entry-1",
             data={
                 CONF_DEVICE_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                CONF_DEVICE_NAME: "Test Device",
+                CONF_DEVICE_NAME: "CRAFTY+",
                 CONF_DEVICE_TYPE: "crafty",
             },
         )
         entry.add_to_hass(hass)
 
-        with patch.object(StorzBickelClient, "scan", new_callable=AsyncMock) as mock_scan:
-            mock_device_info.address = "AA:BB:CC:DD:EE:FF"
-            mock_device_info.name = "Test Device"
-            mock_device_info.device_type = DeviceType.CRAFTY
-            mock_scan.return_value = [mock_device_info]
+        mock_service_info = MagicMock()
+        mock_service_info.address = "AA:BB:CC:DD:EE:FF"
+        mock_service_info.name = "CRAFTY+"
 
+        with patch(
+            "homeassistant.components.bluetooth.async_discovered_service_info",
+            return_value=[mock_service_info],
+        ):
             result = await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_USER}
             )

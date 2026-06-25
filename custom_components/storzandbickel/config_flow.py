@@ -24,6 +24,14 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+_SNB_NAME_KEYWORDS = ("S&B", "STORZ", "VENTY", "VEAZY", "CRAFTY", "VOLCANO")
+
+
+def _is_snb_device(name: str) -> bool:
+    name_upper = name.upper()
+    return any(kw in name_upper for kw in _SNB_NAME_KEYWORDS)
+
+
 # MAC address validation pattern (supports both formats: XX:XX:XX:XX:XX:XX and XX-XX-XX-XX-XX-XX)
 MAC_ADDRESS_PATTERN = re.compile(
     r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
@@ -85,6 +93,7 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.discovered_devices: dict[str, str] = {}
+        self._discovered_device_types: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -123,31 +132,36 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the scan step."""
         errors: dict[str, str] = {}
 
-        if user_input is not None:
-            try:
-                info = await validate_input(self.hass, user_input, skip_scan=False)
-            except Exception as ex:
-                _LOGGER.exception("Unexpected exception: %s", ex)
-                errors["base"] = str(ex)
-            else:
-                await self.async_set_unique_id(info[CONF_DEVICE_ADDRESS])
-                self._abort_if_unique_id_configured()
+        if user_input is not None and CONF_DEVICE_ADDRESS in user_input:
+            address = user_input[CONF_DEVICE_ADDRESS]
+            name = self.discovered_devices.get(address, address)
+            device_type = self._discovered_device_types.get(address, "unknown")
+            await self.async_set_unique_id(address)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=name,
+                data={
+                    CONF_DEVICE_NAME: name,
+                    CONF_DEVICE_ADDRESS: address,
+                    CONF_DEVICE_TYPE: device_type,
+                },
+            )
 
-                return self.async_create_entry(
-                    title=info[CONF_DEVICE_NAME],
-                    data=info,
-                )
-
-        # Scan for devices
+        # Use HA's Bluetooth stack so ESPHome proxy devices are visible
         if not self.discovered_devices:
             try:
-                client = StorzBickelClient()
-                devices = await client.scan(timeout=10.0)
-                self.discovered_devices = {
-                    device.address: device.name or device.address for device in devices
-                }
+                for service_info in bluetooth.async_discovered_service_info(
+                    self.hass, connectable=True
+                ):
+                    name = service_info.name or ""
+                    if not _is_snb_device(name):
+                        continue
+                    client = StorzBickelClient()
+                    slug = device_type_slug(client._detect_device_type(name)) or "unknown"
+                    self.discovered_devices[service_info.address] = name or service_info.address
+                    self._discovered_device_types[service_info.address] = slug
             except Exception as ex:
-                _LOGGER.exception("Error scanning for devices: %s", ex)
+                _LOGGER.exception("Error discovering devices: %s", ex)
                 errors["base"] = "scan_failed"
 
         if not self.discovered_devices:
@@ -270,6 +284,7 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ctx = cast(dict[str, Any], self.context)
         ctx["device_address"] = discovery_info.address
         ctx["device_name"] = device.name or discovery_info.name or discovery_info.address
+        ctx["device_type"] = device_type_slug(device.device_type) or "unknown"
 
         return await self.async_step_bluetooth_confirm()
 
@@ -285,10 +300,16 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={"name": device_name},
             )
 
-        return await self.async_step_scan(
-            {
-                CONF_DEVICE_ADDRESS: ctx["device_address"],
-            }
+        address = ctx["device_address"]
+        name = ctx.get("device_name", address)
+        device_type = ctx.get("device_type", "unknown")
+        return self.async_create_entry(
+            title=name,
+            data={
+                CONF_DEVICE_NAME: name,
+                CONF_DEVICE_ADDRESS: address,
+                CONF_DEVICE_TYPE: device_type,
+            },
         )
 
     async def async_step_reconfigure(

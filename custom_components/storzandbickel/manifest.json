@@ -12,8 +12,18 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/lorek123/ha-snb/issues",
+  "bluetooth": [
+    {"local_name": "S&B VOLCANO*"},
+    {"local_name": "S&B VY*"},
+    {"local_name": "S&B VZ*"},
+    {"local_name": "STORZ&BICKEL*"},
+    {"local_name": "Storz&Bickel*"},
+    {"local_name": "VENTY*"},
+    {"local_name": "VEAZY*"},
+    {"local_name": "CRAFTY*"}
+  ],
   "requirements": [
     "storzandbickel-ble>=0.1.8"
   ],
-  "version": "0.1.13"
+  "version": "0.1.14"
 }
