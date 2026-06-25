@@ -147,22 +147,38 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        # Use HA's Bluetooth stack so ESPHome proxy devices are visible
-        if not self.discovered_devices:
-            try:
+        # Use HA's Bluetooth stack so ESPHome proxy devices are visible.
+        # Always re-query the cache (don't short-circuit with discovered_devices)
+        # so that a retry after powering on the device picks it up.
+        self.discovered_devices = {}
+        self._discovered_device_types = {}
+        try:
+            # Try connectable scanners first (local adapter + ESPHome proxy),
+            # then fall back to passive-only scanners so nothing is missed.
+            seen: set[str] = set()
+            for connectable in (True, False):
                 for service_info in bluetooth.async_discovered_service_info(
-                    self.hass, connectable=True
+                    self.hass, connectable=connectable
                 ):
+                    if service_info.address in seen:
+                        continue
                     name = service_info.name or ""
                     if not _is_snb_device(name):
                         continue
+                    seen.add(service_info.address)
                     client = StorzBickelClient()
                     slug = device_type_slug(client._detect_device_type(name)) or "unknown"
                     self.discovered_devices[service_info.address] = name or service_info.address
                     self._discovered_device_types[service_info.address] = slug
-            except Exception as ex:
-                _LOGGER.exception("Error discovering devices: %s", ex)
-                errors["base"] = "scan_failed"
+            scanner_count = bluetooth.async_scanner_count(self.hass, connectable=True)
+            _LOGGER.warning(
+                "S&B scan: %d bluetooth scanner(s), %d S&B device(s) found",
+                scanner_count,
+                len(self.discovered_devices),
+            )
+        except Exception as ex:
+            _LOGGER.exception("Error discovering devices: %s", ex)
+            errors["base"] = "scan_failed"
 
         if not self.discovered_devices:
             return self.async_show_form(
