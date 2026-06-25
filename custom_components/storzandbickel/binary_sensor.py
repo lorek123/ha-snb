@@ -51,4 +51,5 @@ class ChargingBinarySensor(StorzBickelEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         if not self.coordinator.data or not self.coordinator.data.get("state"):
             return None
-        return bool(getattr(self.coordinator.data["state"], "charging", False))
+        charging = getattr(self.coordinator.data["state"], "charging", None)
+        return bool(charging) if charging is not None else None
