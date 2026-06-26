@@ -23,7 +23,7 @@
     {"local_name": "CRAFTY*"}
   ],
   "requirements": [
-    "storzandbickel-ble>=0.1.10"
+    "storzandbickel-ble>=0.1.11"
   ],
-  "version": "0.1.16"
+  "version": "0.1.17"
 }
