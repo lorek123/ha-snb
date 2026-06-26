@@ -25,5 +25,5 @@
   "requirements": [
     "storzandbickel-ble>=0.1.11"
   ],
-  "version": "0.1.17"
+  "version": "0.1.18"
 }

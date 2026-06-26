@@ -31,7 +31,9 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     lib_ver: str | None
     try:
-        lib_ver = importlib.metadata.version("storzandbickel-ble")
+        lib_ver = await hass.async_add_executor_job(
+            importlib.metadata.version, "storzandbickel-ble"
+        )
     except importlib.metadata.PackageNotFoundError:
         lib_ver = None
 
