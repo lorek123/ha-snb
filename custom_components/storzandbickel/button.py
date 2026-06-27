@@ -47,8 +47,8 @@ class BoostModeButton(StorzBickelEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        if self.coordinator.device and hasattr(self.coordinator.device, "activate_boost_mode"):
-            await self.coordinator.device.activate_boost_mode()
+        if self.coordinator.device and hasattr(self.coordinator.device, "toggle_boost_mode"):
+            await self.coordinator.device.toggle_boost_mode()
             await self.coordinator.async_request_refresh()
 
 
