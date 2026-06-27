@@ -20,7 +20,7 @@ test = [
 ]
 # Static typing and linting (also installed in CI).
 dev = [
-    "pyright>=1.1.410",
+    "pyright>=1.1.411",
     "ruff>=0.1.0",
 ]
 
