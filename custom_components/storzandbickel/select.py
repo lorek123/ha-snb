@@ -1,4 +1,5 @@
 """Select platform for Storz & Bickel integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.select import SelectEntity
@@ -7,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_TYPE_VOLCANO, DOMAIN, device_type_slug
+from .const import DEVICE_TYPE_VOLCANO, device_type_slug
 from .data import StorzBickelRuntimeData
 from .coordinator import StorzBickelDataUpdateCoordinator
 from .entity import StorzBickelEntity
@@ -25,7 +26,11 @@ async def async_setup_entry(
     """Set up select entities."""
     runtime: StorzBickelRuntimeData = entry.runtime_data
     coordinator = runtime.coordinator
-    dt = device_type_slug(coordinator.data.get("device_type")) if coordinator.data else None
+    dt = (
+        device_type_slug(coordinator.data.get("device_type"))
+        if coordinator.data
+        else None
+    )
 
     entities: list[SelectEntity] = []
     if dt == DEVICE_TYPE_VOLCANO:
@@ -53,7 +58,8 @@ class VolcanoWorkflowPresetSelect(StorzBickelEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         if option not in VOLCANO_WORKFLOW_PRESETS:
             return
-        if self.coordinator.device and hasattr(self.coordinator.device, "run_workflow_preset"):
+        if self.coordinator.device and hasattr(
+            self.coordinator.device, "run_workflow_preset"
+        ):
             await self.coordinator.device.run_workflow_preset(option)
             await self.coordinator.async_request_refresh()
-

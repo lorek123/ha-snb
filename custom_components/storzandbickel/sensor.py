@@ -1,4 +1,5 @@
 """Sensor platform for Storz & Bickel integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -17,7 +18,6 @@ from .const import (
     DEVICE_TYPE_VEAZY,
     DEVICE_TYPE_VENTY,
     DEVICE_TYPE_VOLCANO,
-    DOMAIN,
     device_type_slug,
 )
 from .data import StorzBickelRuntimeData
@@ -42,7 +42,11 @@ async def async_setup_entry(
     entities.append(ConnectionStateSensor(coordinator))
     entities.append(SignalStrengthSensor(coordinator))
 
-    dt = device_type_slug(coordinator.data.get("device_type")) if coordinator.data else None
+    dt = (
+        device_type_slug(coordinator.data.get("device_type"))
+        if coordinator.data
+        else None
+    )
 
     if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(BatteryLevelSensor(coordinator))
@@ -119,7 +123,9 @@ class UsageTimeSensor(StorzBickelEntity, SensorEntity):
             return None
         state = self.coordinator.data["state"]
         # Crafty uses usage_hours; Volcano uses heating_hours
-        hours = getattr(state, "usage_hours", None) or getattr(state, "heating_hours", None)
+        hours = getattr(state, "usage_hours", None) or getattr(
+            state, "heating_hours", None
+        )
         return hours if isinstance(hours, int) else None
 
     @property
@@ -127,7 +133,9 @@ class UsageTimeSensor(StorzBickelEntity, SensorEntity):
         if not self.coordinator.data or not self.coordinator.data.get("state"):
             return {}
         state = self.coordinator.data["state"]
-        minutes = getattr(state, "usage_minutes", None) or getattr(state, "heating_minutes", None)
+        minutes = getattr(state, "usage_minutes", None) or getattr(
+            state, "heating_minutes", None
+        )
         return {"usage_minutes": minutes or 0}
 
 

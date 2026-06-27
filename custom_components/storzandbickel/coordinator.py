@@ -1,4 +1,5 @@
 """Data update coordinator for Storz & Bickel."""
+
 from __future__ import annotations
 
 import asyncio
@@ -57,7 +58,9 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
         self.entry = entry
-        self.device: Any = None  # Concrete type from storzandbickel_ble (varies by device)
+        self.device: Any = (
+            None  # Concrete type from storzandbickel_ble (varies by device)
+        )
         self._connect_lock = asyncio.Lock()
         self._connect_error_logged = False
         # Backoff state: monotonic timestamp before which we skip connection attempts.
@@ -203,9 +206,7 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
             self._log_expected_device_unavailable(
                 f"Device {address} not visible to HA bluetooth scanner (off or out of range)"
             )
-            raise UpdateFailed(
-                f"Device {address} not in range"
-            )
+            raise UpdateFailed(f"Device {address} not in range")
 
         # Device is visible — attempt GATT connection.
         try:
@@ -234,7 +235,9 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
                 )
                 self._connect_error_logged = True
             else:
-                _LOGGER.debug("Unexpected error connecting to device (repeated): %s", err)
+                _LOGGER.debug(
+                    "Unexpected error connecting to device (repeated): %s", err
+                )
             raise UpdateFailed(f"Error connecting to device: {err}") from err
 
     # ------------------------------------------------------------------

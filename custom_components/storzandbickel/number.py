@@ -1,7 +1,7 @@
 """Number platform for Storz & Bickel integration."""
+
 from __future__ import annotations
 
-from typing import Any
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
@@ -9,7 +9,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VEAZY, DEVICE_TYPE_VENTY, DOMAIN, device_type_slug
+from .const import (
+    DEVICE_TYPE_CRAFTY,
+    DEVICE_TYPE_VEAZY,
+    DEVICE_TYPE_VENTY,
+    device_type_slug,
+)
 from .data import StorzBickelRuntimeData
 from .coordinator import StorzBickelDataUpdateCoordinator
 from .entity import StorzBickelEntity
@@ -25,7 +30,11 @@ async def async_setup_entry(
     """Set up number entities."""
     runtime: StorzBickelRuntimeData = entry.runtime_data
     coordinator = runtime.coordinator
-    dt = device_type_slug(coordinator.data.get("device_type")) if coordinator.data else None
+    dt = (
+        device_type_slug(coordinator.data.get("device_type"))
+        if coordinator.data
+        else None
+    )
 
     entities: list[NumberEntity] = []
 
@@ -59,7 +68,9 @@ class BrightnessNumber(StorzBickelEntity, NumberEntity):
         return getattr(self.coordinator.data["state"], "brightness", None)
 
     async def async_set_native_value(self, value: float) -> None:
-        if self.coordinator.device and hasattr(self.coordinator.device, "set_brightness"):
+        if self.coordinator.device and hasattr(
+            self.coordinator.device, "set_brightness"
+        ):
             await self.coordinator.device.set_brightness(int(value))
             await self.coordinator.async_request_refresh()
 
@@ -118,7 +129,9 @@ class CraftyLedBrightnessNumber(StorzBickelEntity, NumberEntity):
         return getattr(self.coordinator.data["state"], "led_brightness", None)
 
     async def async_set_native_value(self, value: float) -> None:
-        if self.coordinator.device and hasattr(self.coordinator.device, "set_led_brightness"):
+        if self.coordinator.device and hasattr(
+            self.coordinator.device, "set_led_brightness"
+        ):
             await self.coordinator.device.set_led_brightness(int(value))
             await self.coordinator.async_request_refresh()
 
@@ -144,7 +157,8 @@ class CraftyAutoOffNumber(StorzBickelEntity, NumberEntity):
         return getattr(self.coordinator.data["state"], "auto_off_time", None)
 
     async def async_set_native_value(self, value: float) -> None:
-        if self.coordinator.device and hasattr(self.coordinator.device, "set_auto_off_time"):
+        if self.coordinator.device and hasattr(
+            self.coordinator.device, "set_auto_off_time"
+        ):
             await self.coordinator.device.set_auto_off_time(int(value))
             await self.coordinator.async_request_refresh()
-

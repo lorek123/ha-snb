@@ -1,4 +1,5 @@
 """Config flow for Storz & Bickel integration."""
+
 from __future__ import annotations
 
 import logging
@@ -6,7 +7,6 @@ import re
 from typing import Any, cast
 
 from storzandbickel_ble import StorzBickelClient
-from storzandbickel_ble.models import DeviceType
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -33,9 +33,7 @@ def _is_snb_device(name: str) -> bool:
 
 
 # MAC address validation pattern (supports both formats: XX:XX:XX:XX:XX:XX and XX-XX-XX-XX-XX-XX)
-MAC_ADDRESS_PATTERN = re.compile(
-    r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
-)
+MAC_ADDRESS_PATTERN = re.compile(r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$")
 
 
 def validate_mac_address(address: str) -> bool:
@@ -56,12 +54,12 @@ async def validate_input(
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
     address = data[CONF_DEVICE_ADDRESS]
-    
+
     # Normalize MAC address
     address = normalize_mac_address(address)
-    
+
     client = StorzBickelClient()
-    
+
     if skip_scan:
         # For manual entry, we'll try to connect directly
         # We'll validate the device type when we connect
@@ -70,7 +68,7 @@ async def validate_input(
             CONF_DEVICE_ADDRESS: address,
             CONF_DEVICE_TYPE: data.get(CONF_DEVICE_TYPE, "unknown"),
         }
-    
+
     # For scanned devices, verify it's still available
     devices = await client.scan(timeout=5.0)
     device = next((d for d in devices if d.address.upper() == address.upper()), None)
@@ -133,7 +131,7 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None and CONF_DEVICE_ADDRESS in user_input:
-            address = user_input[CONF_DEVICE_ADDRESS]
+            address: str = user_input[CONF_DEVICE_ADDRESS]
             name = self.discovered_devices.get(address, address)
             device_type = self._discovered_device_types.get(address, "unknown")
             await self.async_set_unique_id(address)
@@ -167,8 +165,12 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         continue
                     seen.add(service_info.address)
                     client = StorzBickelClient()
-                    slug = device_type_slug(client._detect_device_type(name)) or "unknown"
-                    self.discovered_devices[service_info.address] = name or service_info.address
+                    slug = (
+                        device_type_slug(client._detect_device_type(name)) or "unknown"
+                    )
+                    self.discovered_devices[service_info.address] = (
+                        name or service_info.address
+                    )
                     self._discovered_device_types[service_info.address] = slug
             scanner_count = bluetooth.async_scanner_count(self.hass, connectable=True)
             _LOGGER.warning(
@@ -208,32 +210,36 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             address = user_input.get(CONF_DEVICE_ADDRESS, "").strip()
-            
+
             # Validate MAC address format
             if not validate_mac_address(address):
                 errors[CONF_DEVICE_ADDRESS] = "invalid_mac_address"
             else:
                 # Normalize the address
                 normalized_address = normalize_mac_address(address)
-                
+
                 # Check if already configured
                 await self.async_set_unique_id(normalized_address)
                 self._abort_if_unique_id_configured()
-                
+
                 # Try to validate by attempting to connect
                 try:
                     # For manual entry, we'll allow it even if device is not currently discoverable
                     # The coordinator will handle connection when the device is available
                     device_name = user_input.get(CONF_DEVICE_NAME, normalized_address)
-                    
+
                     # Try to scan to get device info if available
                     client = StorzBickelClient()
                     devices = await client.scan(timeout=5.0)
                     device = next(
-                        (d for d in devices if d.address.upper() == normalized_address.upper()),
+                        (
+                            d
+                            for d in devices
+                            if d.address.upper() == normalized_address.upper()
+                        ),
                         None,
                     )
-                    
+
                     if device:
                         # Device found, use its info
                         device_type = device_type_slug(device.device_type) or "unknown"
@@ -246,13 +252,13 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             "Device %s not found during scan, but allowing manual entry",
                             normalized_address,
                         )
-                    
+
                     info = {
                         CONF_DEVICE_NAME: device_name,
                         CONF_DEVICE_ADDRESS: normalized_address,
                         CONF_DEVICE_TYPE: device_type,
                     }
-                    
+
                     return self.async_create_entry(
                         title=info[CONF_DEVICE_NAME],
                         data=info,
@@ -289,9 +295,7 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Check if this is a Storz & Bickel device
         client = StorzBickelClient()
         devices = await client.scan(timeout=5.0)
-        device = next(
-            (d for d in devices if d.address == discovery_info.address), None
-        )
+        device = next((d for d in devices if d.address == discovery_info.address), None)
 
         if not device:
             return self.async_abort(reason="not_supported")
@@ -299,7 +303,9 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Store device info in context (extensions beyond ConfigFlowContext TypedDict)
         ctx = cast(dict[str, Any], self.context)
         ctx["device_address"] = discovery_info.address
-        ctx["device_name"] = device.name or discovery_info.name or discovery_info.address
+        ctx["device_name"] = (
+            device.name or discovery_info.name or discovery_info.address
+        )
         ctx["device_type"] = device_type_slug(device.device_type) or "unknown"
 
         return await self.async_step_bluetooth_confirm()

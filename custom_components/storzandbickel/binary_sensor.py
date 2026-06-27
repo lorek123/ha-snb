@@ -1,4 +1,5 @@
 """Binary sensor platform for Storz & Bickel integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -28,7 +29,11 @@ async def async_setup_entry(
     coordinator = runtime.coordinator
     entities: list[BinarySensorEntity] = []
 
-    dt = device_type_slug(coordinator.data.get("device_type")) if coordinator.data else None
+    dt = (
+        device_type_slug(coordinator.data.get("device_type"))
+        if coordinator.data
+        else None
+    )
 
     if dt == DEVICE_TYPE_CRAFTY:
         entities.append(ChargingBinarySensor(coordinator))

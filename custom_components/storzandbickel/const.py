@@ -1,4 +1,5 @@
 """Constants for the Storz & Bickel integration."""
+
 from __future__ import annotations
 
 DOMAIN = "storzandbickel"
@@ -34,6 +35,7 @@ def device_type_slug(device_type: object | None) -> str | None:
         if tail:
             return tail.lower()
     return s.lower()
+
 
 # Attributes
 ATTR_BATTERY_LEVEL = "battery_level"

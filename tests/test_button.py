@@ -26,7 +26,7 @@ def mock_entry():
 def mock_device():
     """Create a mock device."""
     device = AsyncMock()
-    device.activate_boost_mode = AsyncMock()
+    device.toggle_boost_mode = AsyncMock()
     return device
 
 
@@ -61,7 +61,7 @@ class TestBoostModeButton:
 
         await button.async_press()
 
-        mock_device.activate_boost_mode.assert_called_once()
+        mock_device.toggle_boost_mode.assert_called_once()
 
     async def test_press_no_device(self, coordinator):
         """Test button press when device is None."""
@@ -74,7 +74,7 @@ class TestBoostModeButton:
     async def test_press_no_method(self, coordinator):
         """Test button press when device doesn't have the method."""
         coordinator.device = MagicMock()
-        del coordinator.device.activate_boost_mode
+        del coordinator.device.toggle_boost_mode
         button = BoostModeButton(coordinator)
 
         # Should not raise an error

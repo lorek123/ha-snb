@@ -41,7 +41,9 @@ async def async_get_config_entry_diagnostics(
         "title": entry.title,
         "device_name": entry.data.get(CONF_DEVICE_NAME),
         "device_type": entry.data.get(CONF_DEVICE_TYPE),
-        "device_address_tail": _redact_address(str(entry.data.get(CONF_DEVICE_ADDRESS, ""))),
+        "device_address_tail": _redact_address(
+            str(entry.data.get(CONF_DEVICE_ADDRESS, ""))
+        ),
         "library_version": lib_ver,
         "connection_state": "disconnected",
     }
@@ -55,13 +57,22 @@ async def async_get_config_entry_diagnostics(
     coord = runtime.coordinator
     base["coordinator_device_connected"] = coord.device is not None
     base["last_update_success"] = coord.last_update_success
-    base["connection_state"] = "connected" if coord.device is not None else "disconnected"
+    base["connection_state"] = (
+        "connected" if coord.device is not None else "disconnected"
+    )
     if coord.last_exception is not None:
         base["last_exception"] = repr(coord.last_exception)
 
     device = coord.device
     if device is not None:
-        for attr in ("name", "address", "device_type", "firmware_version", "ble_firmware_version", "serial_number"):
+        for attr in (
+            "name",
+            "address",
+            "device_type",
+            "firmware_version",
+            "ble_firmware_version",
+            "serial_number",
+        ):
             value = getattr(device, attr, None)
             if value is not None:
                 if attr == "address":

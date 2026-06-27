@@ -1,4 +1,5 @@
 """Base entity for Storz & Bickel integration."""
+
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo

@@ -1,4 +1,5 @@
 """Button platform for Storz & Bickel integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity
@@ -6,11 +7,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .data import StorzBickelRuntimeData
 from .coordinator import StorzBickelDataUpdateCoordinator
 from .entity import StorzBickelEntity
-from .const import DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VEAZY, DEVICE_TYPE_VENTY, device_type_slug
+from .const import (
+    DEVICE_TYPE_CRAFTY,
+    DEVICE_TYPE_VEAZY,
+    DEVICE_TYPE_VENTY,
+    device_type_slug,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -28,7 +33,11 @@ async def async_setup_entry(
         RefreshButton(coordinator),
     ]
 
-    dt = device_type_slug(coordinator.data.get("device_type")) if coordinator.data else None
+    dt = (
+        device_type_slug(coordinator.data.get("device_type"))
+        if coordinator.data
+        else None
+    )
     if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(BoostModeButton(coordinator))
         entities.append(FindDeviceButton(coordinator))
@@ -47,7 +56,9 @@ class BoostModeButton(StorzBickelEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        if self.coordinator.device and hasattr(self.coordinator.device, "toggle_boost_mode"):
+        if self.coordinator.device and hasattr(
+            self.coordinator.device, "toggle_boost_mode"
+        ):
             await self.coordinator.device.toggle_boost_mode()
             await self.coordinator.async_request_refresh()
 

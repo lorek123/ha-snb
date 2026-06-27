@@ -5,7 +5,7 @@ description = "Home Assistant custom integration for Storz & Bickel vaporizers v
 readme = "README.md"
 requires-python = ">=3.14.2"
 dependencies = [
-    "storzandbickel-ble>=0.1.12",
+    "storzandbickel-ble>=0.1.13",
 ]
 
 [project.optional-dependencies]
@@ -18,9 +18,10 @@ test = [
     "home-assistant-bluetooth>=2.0.0",
     "serialx==1.8.0",
 ]
-# Static typing (also installed in CI).
+# Static typing and linting (also installed in CI).
 dev = [
     "pyright>=1.1.410",
+    "ruff>=0.1.0",
 ]
 
 [tool.pyright]

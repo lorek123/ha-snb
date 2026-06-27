@@ -1,4 +1,5 @@
 """Climate platform for Storz & Bickel integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -40,7 +41,9 @@ class StorzBickelClimateEntity(StorzBickelEntity, ClimateEntity):
 
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = TEMP_MIN
@@ -74,7 +77,9 @@ class StorzBickelClimateEntity(StorzBickelEntity, ClimateEntity):
             return HVACMode.OFF
         state = self.coordinator.data["state"]
         if isinstance(state, VentyState):
-            return HVACMode.HEAT if state.heater_mode != HeaterMode.OFF else HVACMode.OFF
+            return (
+                HVACMode.HEAT if state.heater_mode != HeaterMode.OFF else HVACMode.OFF
+            )
         return HVACMode.HEAT if state.heater_on else HVACMode.OFF
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
