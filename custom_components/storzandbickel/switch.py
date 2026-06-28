@@ -36,6 +36,8 @@ async def async_setup_entry(
     # Add air pump switch if device supports it (Volcano Hybrid)
     if dt == DEVICE_TYPE_VOLCANO:
         entities.append(AirPumpSwitch(coordinator))
+        entities.append(DisplayOnCoolingSwitch(coordinator))
+        entities.append(VibrationOnReadySwitch(coordinator))
 
     if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(VibrationSwitch(coordinator))
@@ -149,3 +151,21 @@ class BoostTimeoutDisabledSwitch(_FlagSwitch):
     _flag_key = "boost_timeout_disabled"
     _state_attr = "boost_timeout_disabled"
     _setter = "set_boost_timeout_disabled"
+
+
+class DisplayOnCoolingSwitch(_FlagSwitch):
+    """Show the temperature on the display during cool-down (Volcano)."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _flag_key = "display_on_cooling"
+    _state_attr = "display_on_cooling"
+    _setter = "set_display_on_cooling"
+
+
+class VibrationOnReadySwitch(_FlagSwitch):
+    """Vibrate when the setpoint temperature is reached (Volcano)."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _flag_key = "vibration_on_ready"
+    _state_attr = "vibration_on_ready"
+    _setter = "set_vibration_on_ready"

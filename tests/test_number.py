@@ -1,4 +1,5 @@
 """Test the number platform."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -9,12 +10,16 @@ from storzandbickel_ble.models import DeviceState, DeviceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from custom_components.storzandbickel.coordinator import StorzBickelDataUpdateCoordinator
+from custom_components.storzandbickel.coordinator import (
+    StorzBickelDataUpdateCoordinator,
+)
 from custom_components.storzandbickel.number import (
     BrightnessNumber,
     CraftyAutoOffNumber,
     CraftyBoostTemperatureNumber,
     CraftyLedBrightnessNumber,
+    VolcanoAutoOffNumber,
+    VolcanoLedBrightnessNumber,
 )
 
 
@@ -102,7 +107,9 @@ class TestCraftyBoostTemperatureNumber:
         n = CraftyBoostTemperatureNumber(coordinator)
         assert n.native_value == 33.0
 
-    async def test_set_value_calls_set_boost_temperature(self, hass: HomeAssistant, mock_entry):
+    async def test_set_value_calls_set_boost_temperature(
+        self, hass: HomeAssistant, mock_entry
+    ):
         state = MagicMock(spec=DeviceState)
         state.boost_temperature = None
         device = MagicMock()
@@ -127,7 +134,10 @@ class TestCraftyLedBrightnessNumber:
         return c
 
     def test_unique_id(self, coord):
-        assert CraftyLedBrightnessNumber(coord)._attr_unique_id == "test-entry_led_brightness"
+        assert (
+            CraftyLedBrightnessNumber(coord)._attr_unique_id
+            == "test-entry_led_brightness"
+        )
 
     def test_native_value(self, coord):
         assert CraftyLedBrightnessNumber(coord).native_value == 75
@@ -174,4 +184,62 @@ class TestCraftyAutoOffNumber:
         n = CraftyAutoOffNumber(coord)
         await n.async_set_native_value(120)
         device.set_auto_off_time.assert_called_once_with(120)
+        coord.async_request_refresh.assert_called_once()
+
+
+class TestVolcanoLedBrightnessNumber:
+    @pytest.fixture
+    def coord(self, hass, mock_entry):
+        state = MagicMock(spec=DeviceState)
+        state.led_brightness = 6
+        c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        c.data = {"state": state, "device_type": DeviceType.VOLCANO}
+        return c
+
+    def test_unique_id(self, coord):
+        assert (
+            VolcanoLedBrightnessNumber(coord)._attr_unique_id
+            == "test-entry_led_brightness"
+        )
+
+    def test_native_value(self, coord):
+        assert VolcanoLedBrightnessNumber(coord).native_value == 6
+
+    def test_native_value_none(self, coord):
+        coord.data = None
+        assert VolcanoLedBrightnessNumber(coord).native_value is None
+
+    async def test_set_value(self, coord):
+        device = MagicMock()
+        device.set_led_brightness = AsyncMock()
+        coord.device = device
+        coord.async_request_refresh = AsyncMock()
+        await VolcanoLedBrightnessNumber(coord).async_set_native_value(8)
+        device.set_led_brightness.assert_called_once_with(8)
+        coord.async_request_refresh.assert_called_once()
+
+
+class TestVolcanoAutoOffNumber:
+    @pytest.fixture
+    def coord(self, hass, mock_entry):
+        state = MagicMock(spec=DeviceState)
+        state.auto_off_time = 1800
+        c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        c.data = {"state": state, "device_type": DeviceType.VOLCANO}
+        return c
+
+    def test_native_value(self, coord):
+        assert VolcanoAutoOffNumber(coord).native_value == 1800
+
+    def test_native_value_none(self, coord):
+        coord.data = None
+        assert VolcanoAutoOffNumber(coord).native_value is None
+
+    async def test_set_value(self, coord):
+        device = MagicMock()
+        device.set_auto_off_time = AsyncMock()
+        coord.device = device
+        coord.async_request_refresh = AsyncMock()
+        await VolcanoAutoOffNumber(coord).async_set_native_value(600)
+        device.set_auto_off_time.assert_called_once_with(600)
         coord.async_request_refresh.assert_called_once()

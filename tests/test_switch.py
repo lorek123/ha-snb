@@ -1,4 +1,5 @@
 """Test the switch platform."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -9,11 +10,15 @@ from storzandbickel_ble.models import DeviceState, DeviceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from custom_components.storzandbickel.coordinator import StorzBickelDataUpdateCoordinator
+from custom_components.storzandbickel.coordinator import (
+    StorzBickelDataUpdateCoordinator,
+)
 from custom_components.storzandbickel.switch import (
     AirPumpSwitch,
     BoostTimeoutDisabledSwitch,
+    DisplayOnCoolingSwitch,
     SuperboostSwitch,
+    VibrationOnReadySwitch,
     VibrationSwitch,
 )
 
@@ -252,3 +257,63 @@ class TestSuperboostSwitch:
     def test_no_data(self, coord):
         coord.data = None
         assert SuperboostSwitch(coord).is_on is False
+
+
+class TestDisplayOnCoolingSwitch:
+    @pytest.fixture
+    def coord(self, hass, mock_entry):
+        state = MagicMock(spec=DeviceState)
+        state.display_on_cooling = False
+        c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        c.data = {"state": state, "device_type": DeviceType.VOLCANO}
+        c.device = MagicMock()
+        c.device.set_display_on_cooling = AsyncMock()
+        c.async_request_refresh = AsyncMock()
+        return c
+
+    def test_unique_id(self, coord):
+        assert (
+            DisplayOnCoolingSwitch(coord)._attr_unique_id
+            == "test-entry_display_on_cooling"
+        )
+
+    def test_is_on_reflects_state(self, coord):
+        assert DisplayOnCoolingSwitch(coord).is_on is False
+        coord.data["state"].display_on_cooling = True
+        assert DisplayOnCoolingSwitch(coord).is_on is True
+
+    async def test_turn_on_off(self, coord):
+        sw = DisplayOnCoolingSwitch(coord)
+        await sw.async_turn_on()
+        coord.device.set_display_on_cooling.assert_called_with(True)
+        await sw.async_turn_off()
+        coord.device.set_display_on_cooling.assert_called_with(False)
+
+
+class TestVibrationOnReadySwitch:
+    @pytest.fixture
+    def coord(self, hass, mock_entry):
+        state = MagicMock(spec=DeviceState)
+        state.vibration_on_ready = True
+        c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        c.data = {"state": state, "device_type": DeviceType.VOLCANO}
+        c.device = MagicMock()
+        c.device.set_vibration_on_ready = AsyncMock()
+        c.async_request_refresh = AsyncMock()
+        return c
+
+    def test_unique_id(self, coord):
+        assert (
+            VibrationOnReadySwitch(coord)._attr_unique_id
+            == "test-entry_vibration_on_ready"
+        )
+
+    def test_is_on_reflects_state(self, coord):
+        assert VibrationOnReadySwitch(coord).is_on is True
+
+    async def test_turn_on_off(self, coord):
+        sw = VibrationOnReadySwitch(coord)
+        await sw.async_turn_off()
+        coord.device.set_vibration_on_ready.assert_called_with(False)
+        await sw.async_turn_on()
+        coord.device.set_vibration_on_ready.assert_called_with(True)

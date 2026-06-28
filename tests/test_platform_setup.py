@@ -1,4 +1,5 @@
 """Exercise platform async_setup_entry branches for coverage."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -9,13 +10,23 @@ from storzandbickel_ble.models import DeviceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from custom_components.storzandbickel import binary_sensor, button, climate, number, select, sensor, switch
+from custom_components.storzandbickel import (
+    binary_sensor,
+    button,
+    climate,
+    number,
+    select,
+    sensor,
+    switch,
+)
 from custom_components.storzandbickel.const import (
     CONF_DEVICE_ADDRESS,
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
 )
-from custom_components.storzandbickel.coordinator import StorzBickelDataUpdateCoordinator
+from custom_components.storzandbickel.coordinator import (
+    StorzBickelDataUpdateCoordinator,
+)
 from custom_components.storzandbickel.data import StorzBickelRuntimeData
 
 
@@ -50,7 +61,10 @@ def _coord(hass: HomeAssistant, entry: MagicMock, device_type: DeviceType):
     ],
 )
 async def test_button_platform_entities(
-    hass: HomeAssistant, flow_entry: MagicMock, device_type: DeviceType, expected_boost: int
+    hass: HomeAssistant,
+    flow_entry: MagicMock,
+    device_type: DeviceType,
+    expected_boost: int,
 ):
     _coord(hass, flow_entry, device_type)
     added = MagicMock()
@@ -85,7 +99,7 @@ async def test_climate_platform_adds_one(hass: HomeAssistant, flow_entry: MagicM
 @pytest.mark.parametrize(
     ("device_type", "expected_numbers"),
     [
-        (DeviceType.VOLCANO, 0),
+        (DeviceType.VOLCANO, 2),
         (DeviceType.VENTY, 1),
         (DeviceType.VEAZY, 1),
         (DeviceType.CRAFTY, 3),
@@ -147,7 +161,7 @@ async def test_sensor_platform(
 @pytest.mark.parametrize(
     ("device_type", "expected_switches"),
     [
-        (DeviceType.VOLCANO, 1),
+        (DeviceType.VOLCANO, 3),
         (DeviceType.VENTY, 2),
         (DeviceType.VEAZY, 2),
         (DeviceType.CRAFTY, 2),

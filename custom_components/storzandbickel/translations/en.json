@@ -109,6 +109,12 @@
       },
       "boost_timeout_disabled": {
         "name": "Boost timeout disabled"
+      },
+      "display_on_cooling": {
+        "name": "Display on cooling"
+      },
+      "vibration_on_ready": {
+        "name": "Vibration on ready"
       }
     },
     "button": {
