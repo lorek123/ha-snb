@@ -115,6 +115,15 @@
       },
       "vibration_on_ready": {
         "name": "Vibration on ready"
+      },
+      "eco_mode_charge": {
+        "name": "ECO charge optimization"
+      },
+      "eco_mode_voltage": {
+        "name": "ECO charge limit"
+      },
+      "boost_visualization": {
+        "name": "Boost visualization"
       }
     },
     "button": {
@@ -143,6 +152,12 @@
       },
       "auto_off_time": {
         "name": "Auto-off time"
+      },
+      "boost_offset": {
+        "name": "Boost offset"
+      },
+      "superboost_offset": {
+        "name": "Superboost offset"
       }
     },
     "select": {

@@ -100,8 +100,8 @@ async def test_climate_platform_adds_one(hass: HomeAssistant, flow_entry: MagicM
     ("device_type", "expected_numbers"),
     [
         (DeviceType.VOLCANO, 2),
-        (DeviceType.VENTY, 1),
-        (DeviceType.VEAZY, 1),
+        (DeviceType.VENTY, 3),
+        (DeviceType.VEAZY, 3),
         (DeviceType.CRAFTY, 3),
     ],
 )
@@ -162,8 +162,8 @@ async def test_sensor_platform(
     ("device_type", "expected_switches"),
     [
         (DeviceType.VOLCANO, 3),
-        (DeviceType.VENTY, 2),
-        (DeviceType.VEAZY, 2),
+        (DeviceType.VENTY, 5),
+        (DeviceType.VEAZY, 4),
         (DeviceType.CRAFTY, 2),
     ],
 )

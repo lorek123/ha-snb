@@ -36,6 +36,8 @@ async def async_setup_entry(
 
     if dt in [DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(BrightnessNumber(coordinator))
+        entities.append(VentyBoostOffsetNumber(coordinator))
+        entities.append(VentySuperboostOffsetNumber(coordinator))
 
     if dt == DEVICE_TYPE_CRAFTY:
         entities.append(CraftyBoostTemperatureNumber(coordinator))
@@ -197,3 +199,51 @@ class VolcanoAutoOffNumber(StorzBickelEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         await self._async_call_device("set_auto_off_time", int(value))
+
+
+class VentyBoostOffsetNumber(StorzBickelEntity, NumberEntity):
+    """Venty/Veazy boost temperature offset, in degrees above the base setpoint."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value = 0
+    _attr_native_max_value = 99
+    _attr_native_step = 1
+
+    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_boost_offset"
+        self._attr_translation_key = "boost_offset"
+
+    @property
+    def native_value(self) -> float | None:
+        state = self.device_state
+        if state is None:
+            return None
+        return getattr(state, "boost_offset", None)
+
+    async def async_set_native_value(self, value: float) -> None:
+        await self._async_call_device("set_boost_offset", int(value))
+
+
+class VentySuperboostOffsetNumber(StorzBickelEntity, NumberEntity):
+    """Venty/Veazy superboost temperature offset, in degrees above boost."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value = 0
+    _attr_native_max_value = 99
+    _attr_native_step = 1
+
+    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_superboost_offset"
+        self._attr_translation_key = "superboost_offset"
+
+    @property
+    def native_value(self) -> float | None:
+        state = self.device_state
+        if state is None:
+            return None
+        return getattr(state, "superboost_offset", None)
+
+    async def async_set_native_value(self, value: float) -> None:
+        await self._async_call_device("set_superboost_offset", int(value))

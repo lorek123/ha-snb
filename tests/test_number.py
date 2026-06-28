@@ -18,6 +18,8 @@ from custom_components.storzandbickel.number import (
     CraftyAutoOffNumber,
     CraftyBoostTemperatureNumber,
     CraftyLedBrightnessNumber,
+    VentyBoostOffsetNumber,
+    VentySuperboostOffsetNumber,
     VolcanoAutoOffNumber,
     VolcanoLedBrightnessNumber,
 )
@@ -242,4 +244,61 @@ class TestVolcanoAutoOffNumber:
         coord.async_request_refresh = AsyncMock()
         await VolcanoAutoOffNumber(coord).async_set_native_value(600)
         device.set_auto_off_time.assert_called_once_with(600)
+        coord.async_request_refresh.assert_called_once()
+
+
+class TestVentyBoostOffsetNumber:
+    @pytest.fixture
+    def coord(self, hass, mock_entry):
+        state = MagicMock(spec=DeviceState)
+        state.boost_offset = 15
+        c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        c.data = {"state": state, "device_type": DeviceType.VENTY}
+        return c
+
+    def test_unique_id(self, coord):
+        assert (
+            VentyBoostOffsetNumber(coord)._attr_unique_id == "test-entry_boost_offset"
+        )
+
+    def test_native_value(self, coord):
+        assert VentyBoostOffsetNumber(coord).native_value == 15
+
+    def test_native_value_none(self, coord):
+        coord.data = None
+        assert VentyBoostOffsetNumber(coord).native_value is None
+
+    async def test_set_value(self, coord):
+        device = MagicMock()
+        device.set_boost_offset = AsyncMock()
+        coord.device = device
+        coord.async_request_refresh = AsyncMock()
+        await VentyBoostOffsetNumber(coord).async_set_native_value(20)
+        device.set_boost_offset.assert_called_once_with(20)
+        coord.async_request_refresh.assert_called_once()
+
+
+class TestVentySuperboostOffsetNumber:
+    @pytest.fixture
+    def coord(self, hass, mock_entry):
+        state = MagicMock(spec=DeviceState)
+        state.superboost_offset = 30
+        c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        c.data = {"state": state, "device_type": DeviceType.VEAZY}
+        return c
+
+    def test_native_value(self, coord):
+        assert VentySuperboostOffsetNumber(coord).native_value == 30
+
+    def test_native_value_none(self, coord):
+        coord.data = None
+        assert VentySuperboostOffsetNumber(coord).native_value is None
+
+    async def test_set_value(self, coord):
+        device = MagicMock()
+        device.set_superboost_offset = AsyncMock()
+        coord.device = device
+        coord.async_request_refresh = AsyncMock()
+        await VentySuperboostOffsetNumber(coord).async_set_native_value(25)
+        device.set_superboost_offset.assert_called_once_with(25)
         coord.async_request_refresh.assert_called_once()

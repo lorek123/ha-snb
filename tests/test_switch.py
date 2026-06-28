@@ -16,7 +16,10 @@ from custom_components.storzandbickel.coordinator import (
 from custom_components.storzandbickel.switch import (
     AirPumpSwitch,
     BoostTimeoutDisabledSwitch,
+    BoostVisualizationSwitch,
     DisplayOnCoolingSwitch,
+    EcoChargeSwitch,
+    EcoVoltageSwitch,
     SuperboostSwitch,
     VibrationOnReadySwitch,
     VibrationSwitch,
@@ -317,3 +320,49 @@ class TestVibrationOnReadySwitch:
         coord.device.set_vibration_on_ready.assert_called_with(False)
         await sw.async_turn_on()
         coord.device.set_vibration_on_ready.assert_called_with(True)
+
+
+class TestEcoSwitches:
+    @pytest.fixture
+    def coord(self, hass, mock_entry):
+        state = MagicMock(spec=DeviceState)
+        state.eco_mode_charge = False
+        state.eco_mode_voltage = True
+        state.boost_visualization = False
+        c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        c.data = {"state": state, "device_type": DeviceType.VENTY}
+        c.device = MagicMock()
+        c.device.set_eco_mode_charge = AsyncMock()
+        c.device.set_eco_mode_voltage = AsyncMock()
+        c.device.set_boost_visualization = AsyncMock()
+        c.async_request_refresh = AsyncMock()
+        return c
+
+    def test_eco_charge_is_on(self, coord):
+        assert EcoChargeSwitch(coord).is_on is False
+        coord.data["state"].eco_mode_charge = True
+        assert EcoChargeSwitch(coord).is_on is True
+
+    async def test_eco_charge_turn_on_off(self, coord):
+        sw = EcoChargeSwitch(coord)
+        await sw.async_turn_on()
+        coord.device.set_eco_mode_charge.assert_called_with(True)
+        await sw.async_turn_off()
+        coord.device.set_eco_mode_charge.assert_called_with(False)
+
+    def test_eco_voltage_is_on(self, coord):
+        assert EcoVoltageSwitch(coord).is_on is True
+
+    async def test_eco_voltage_turn_off(self, coord):
+        await EcoVoltageSwitch(coord).async_turn_off()
+        coord.device.set_eco_mode_voltage.assert_called_with(False)
+
+    def test_boost_visualization_unique_id(self, coord):
+        assert (
+            BoostVisualizationSwitch(coord)._attr_unique_id
+            == "test-entry_boost_visualization"
+        )
+
+    async def test_boost_visualization_turn_on(self, coord):
+        await BoostVisualizationSwitch(coord).async_turn_on()
+        coord.device.set_boost_visualization.assert_called_with(True)

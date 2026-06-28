@@ -44,6 +44,11 @@ async def async_setup_entry(
 
     if dt in [DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(BoostTimeoutDisabledSwitch(coordinator))
+        entities.append(EcoChargeSwitch(coordinator))
+        entities.append(EcoVoltageSwitch(coordinator))
+
+    if dt == DEVICE_TYPE_VENTY:
+        entities.append(BoostVisualizationSwitch(coordinator))
 
     if dt == DEVICE_TYPE_CRAFTY:
         entities.append(SuperboostSwitch(coordinator))
@@ -169,3 +174,30 @@ class VibrationOnReadySwitch(_FlagSwitch):
     _flag_key = "vibration_on_ready"
     _state_attr = "vibration_on_ready"
     _setter = "set_vibration_on_ready"
+
+
+class EcoChargeSwitch(_FlagSwitch):
+    """ECO charge-current optimization — slower charging to reduce battery aging."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _flag_key = "eco_mode_charge"
+    _state_attr = "eco_mode_charge"
+    _setter = "set_eco_mode_charge"
+
+
+class EcoVoltageSwitch(_FlagSwitch):
+    """ECO charge-voltage limit — caps charge at ~90% to reduce battery aging."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _flag_key = "eco_mode_voltage"
+    _state_attr = "eco_mode_voltage"
+    _setter = "set_eco_mode_voltage"
+
+
+class BoostVisualizationSwitch(_FlagSwitch):
+    """Show boost progress on the display (Venty)."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _flag_key = "boost_visualization"
+    _state_attr = "boost_visualization"
+    _setter = "set_boost_visualization"
