@@ -77,7 +77,8 @@ async def test_button_platform_entities(
     [
         (DeviceType.CRAFTY, 1),
         (DeviceType.VOLCANO, 0),
-        (DeviceType.VENTY, 0),
+        (DeviceType.VENTY, 2),
+        (DeviceType.VEAZY, 2),
     ],
 )
 async def test_binary_sensor_platform(

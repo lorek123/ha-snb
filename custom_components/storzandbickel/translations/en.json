@@ -73,6 +73,9 @@
     "binary_sensor": {
       "charging": {
         "name": "Charging"
+      },
+      "ready": {
+        "name": "Ready"
       }
     },
     "climate": {
