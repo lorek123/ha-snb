@@ -13,7 +13,6 @@ from .const import (
     DEVICE_TYPE_CRAFTY,
     DEVICE_TYPE_VEAZY,
     DEVICE_TYPE_VENTY,
-    device_type_slug,
 )
 from .data import StorzBickelRuntimeData
 from .coordinator import StorzBickelDataUpdateCoordinator
@@ -30,11 +29,7 @@ async def async_setup_entry(
     """Set up number entities."""
     runtime: StorzBickelRuntimeData = entry.runtime_data
     coordinator = runtime.coordinator
-    dt = (
-        device_type_slug(coordinator.data.get("device_type"))
-        if coordinator.data
-        else None
-    )
+    dt = coordinator.device_slug()
 
     entities: list[NumberEntity] = []
 
@@ -63,9 +58,10 @@ class BrightnessNumber(StorzBickelEntity, NumberEntity):
 
     @property
     def native_value(self) -> float | None:
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return None
-        return getattr(self.coordinator.data["state"], "brightness", None)
+        return getattr(state, "brightness", None)
 
     async def async_set_native_value(self, value: float) -> None:
         if self.coordinator.device and hasattr(
@@ -90,9 +86,9 @@ class CraftyBoostTemperatureNumber(StorzBickelEntity, NumberEntity):
 
     @property
     def native_value(self) -> float | None:
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return None
-        state = self.coordinator.data["state"]
         for attr in ("boost_temperature", "boost_temp", "boost_offset"):
             value = getattr(state, attr, None)
             if isinstance(value, (int, float)):
@@ -124,9 +120,10 @@ class CraftyLedBrightnessNumber(StorzBickelEntity, NumberEntity):
 
     @property
     def native_value(self) -> float | None:
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return None
-        return getattr(self.coordinator.data["state"], "led_brightness", None)
+        return getattr(state, "led_brightness", None)
 
     async def async_set_native_value(self, value: float) -> None:
         if self.coordinator.device and hasattr(
@@ -152,9 +149,10 @@ class CraftyAutoOffNumber(StorzBickelEntity, NumberEntity):
 
     @property
     def native_value(self) -> float | None:
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return None
-        return getattr(self.coordinator.data["state"], "auto_off_time", None)
+        return getattr(state, "auto_off_time", None)
 
     async def async_set_native_value(self, value: float) -> None:
         if self.coordinator.device and hasattr(

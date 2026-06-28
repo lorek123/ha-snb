@@ -14,7 +14,6 @@ from .const import (
     DEVICE_TYPE_CRAFTY,
     DEVICE_TYPE_VEAZY,
     DEVICE_TYPE_VENTY,
-    device_type_slug,
 )
 
 PARALLEL_UPDATES = 1
@@ -33,11 +32,7 @@ async def async_setup_entry(
         RefreshButton(coordinator),
     ]
 
-    dt = (
-        device_type_slug(coordinator.data.get("device_type"))
-        if coordinator.data
-        else None
-    )
+    dt = coordinator.device_slug()
     if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(BoostModeButton(coordinator))
         entities.append(FindDeviceButton(coordinator))

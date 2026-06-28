@@ -18,7 +18,6 @@ from .const import (
     DEVICE_TYPE_VEAZY,
     DEVICE_TYPE_VENTY,
     DEVICE_TYPE_VOLCANO,
-    device_type_slug,
 )
 from .data import StorzBickelRuntimeData
 from .coordinator import StorzBickelDataUpdateCoordinator
@@ -42,11 +41,7 @@ async def async_setup_entry(
     entities.append(ConnectionStateSensor(coordinator))
     entities.append(SignalStrengthSensor(coordinator))
 
-    dt = (
-        device_type_slug(coordinator.data.get("device_type"))
-        if coordinator.data
-        else None
-    )
+    dt = coordinator.device_slug()
 
     if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(BatteryLevelSensor(coordinator))
@@ -74,9 +69,10 @@ class CurrentTemperatureSensor(StorzBickelEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the current temperature."""
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return None
-        return self.coordinator.data["state"].current_temperature
+        return state.current_temperature
 
 
 class BatteryLevelSensor(StorzBickelEntity, SensorEntity):
@@ -96,9 +92,9 @@ class BatteryLevelSensor(StorzBickelEntity, SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the battery level."""
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return None
-        state = self.coordinator.data["state"]
         if hasattr(state, "battery_level") and state.battery_level is not None:
             return state.battery_level
         return None
@@ -119,9 +115,9 @@ class UsageTimeSensor(StorzBickelEntity, SensorEntity):
 
     @property
     def native_value(self) -> int | None:
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return None
-        state = self.coordinator.data["state"]
         # Crafty uses usage_hours; Volcano uses heating_hours
         hours = getattr(state, "usage_hours", None) or getattr(
             state, "heating_hours", None
@@ -130,9 +126,9 @@ class UsageTimeSensor(StorzBickelEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return {}
-        state = self.coordinator.data["state"]
         minutes = getattr(state, "usage_minutes", None) or getattr(
             state, "heating_minutes", None
         )
@@ -162,8 +158,8 @@ class SignalStrengthSensor(StorzBickelEntity, SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return signal strength."""
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return None
-        state = self.coordinator.data["state"]
         rssi = getattr(state, "rssi", None)
         return rssi if isinstance(rssi, int) else None

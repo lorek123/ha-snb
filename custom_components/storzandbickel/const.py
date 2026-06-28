@@ -35,15 +35,3 @@ def device_type_slug(device_type: object | None) -> str | None:
         if tail:
             return tail.lower()
     return s.lower()
-
-
-# Attributes
-ATTR_BATTERY_LEVEL = "battery_level"
-ATTR_BOOST_MODE = "boost_mode"
-ATTR_HEATER_STATE = "heater_state"
-ATTR_AIR_PUMP_STATE = "air_pump_state"
-ATTR_VIBRATION = "vibration"
-
-# Defaults
-DEFAULT_SCAN_TIMEOUT = 10.0
-DEFAULT_UPDATE_INTERVAL = 5.0

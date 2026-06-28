@@ -13,7 +13,6 @@ from .const import (
     DEVICE_TYPE_VOLCANO,
     DEVICE_TYPE_VENTY,
     DEVICE_TYPE_VEAZY,
-    device_type_slug,
 )
 from .data import StorzBickelRuntimeData
 from .coordinator import StorzBickelDataUpdateCoordinator
@@ -32,11 +31,7 @@ async def async_setup_entry(
     coordinator = runtime.coordinator
     entities: list[SwitchEntity] = []
 
-    dt = (
-        device_type_slug(coordinator.data.get("device_type"))
-        if coordinator.data
-        else None
-    )
+    dt = coordinator.device_slug()
 
     # Add air pump switch if device supports it (Volcano Hybrid)
     if dt == DEVICE_TYPE_VOLCANO:
@@ -66,9 +61,9 @@ class AirPumpSwitch(StorzBickelEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return if the air pump is on."""
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return False
-        state = self.coordinator.data["state"]
         if hasattr(state, "pump_on"):
             return bool(state.pump_on)
         # Legacy alias if state ever exposes air_pump_on
@@ -109,9 +104,9 @@ class VibrationSwitch(StorzBickelEntity, SwitchEntity):
 
     @property
     def is_on(self) -> bool:
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return False
-        state = self.coordinator.data["state"]
         return bool(getattr(state, "vibration_enabled", False))
 
     async def async_turn_on(self, **kwargs) -> None:
@@ -139,9 +134,10 @@ class SuperboostSwitch(StorzBickelEntity, SwitchEntity):
 
     @property
     def is_on(self) -> bool:
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return False
-        return bool(getattr(self.coordinator.data["state"], "superboost_mode", False))
+        return bool(getattr(state, "superboost_mode", False))
 
     async def async_turn_on(self, **kwargs) -> None:
         if self.coordinator.device and hasattr(
@@ -170,9 +166,9 @@ class BoostTimeoutDisabledSwitch(StorzBickelEntity, SwitchEntity):
 
     @property
     def is_on(self) -> bool:
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return False
-        state = self.coordinator.data["state"]
         return bool(getattr(state, "boost_timeout_disabled", False))
 
     async def async_turn_on(self, **kwargs) -> None:

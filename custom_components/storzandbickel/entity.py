@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_DEVICE_ADDRESS, DOMAIN
+from .const import CONF_DEVICE_ADDRESS, DOMAIN, device_type_slug
 from .coordinator import StorzBickelDataUpdateCoordinator
-from .const import device_type_slug
 
 
 class StorzBickelEntity(CoordinatorEntity[StorzBickelDataUpdateCoordinator], Entity):
@@ -19,6 +20,16 @@ class StorzBickelEntity(CoordinatorEntity[StorzBickelDataUpdateCoordinator], Ent
     def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+
+    @property
+    def device_state(self) -> Any:
+        """Return the latest device state object, or None if not yet polled.
+
+        Centralizes the `coordinator.data` / `"state"` presence check that every
+        read-only entity property would otherwise repeat.
+        """
+        data = self.coordinator.data
+        return data.get("state") if data else None
 
     @property
     def device_info(self) -> DeviceInfo:

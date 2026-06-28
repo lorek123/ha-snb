@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_TYPE_VOLCANO, device_type_slug
+from .const import DEVICE_TYPE_VOLCANO
 from .data import StorzBickelRuntimeData
 from .coordinator import StorzBickelDataUpdateCoordinator
 from .entity import StorzBickelEntity
@@ -26,11 +26,7 @@ async def async_setup_entry(
     """Set up select entities."""
     runtime: StorzBickelRuntimeData = entry.runtime_data
     coordinator = runtime.coordinator
-    dt = (
-        device_type_slug(coordinator.data.get("device_type"))
-        if coordinator.data
-        else None
-    )
+    dt = coordinator.device_slug()
 
     entities: list[SelectEntity] = []
     if dt == DEVICE_TYPE_VOLCANO:

@@ -20,7 +20,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_DEVICE_ADDRESS, CONF_DEVICE_NAME, CONF_DEVICE_TYPE, DOMAIN
+from .const import (
+    CONF_DEVICE_ADDRESS,
+    CONF_DEVICE_NAME,
+    CONF_DEVICE_TYPE,
+    DOMAIN,
+    device_type_slug,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -243,6 +249,10 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
     # ------------------------------------------------------------------
     # Public helpers
     # ------------------------------------------------------------------
+
+    def device_slug(self) -> str | None:
+        """Return the normalized device-type slug from the latest poll, if any."""
+        return device_type_slug(self.data.get("device_type")) if self.data else None
 
     async def async_connect(self) -> None:
         """Ensure device connection is established."""

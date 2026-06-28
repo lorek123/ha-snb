@@ -11,7 +11,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_TYPE_CRAFTY, device_type_slug
+from .const import DEVICE_TYPE_CRAFTY
 from .coordinator import StorzBickelDataUpdateCoordinator
 from .data import StorzBickelRuntimeData
 from .entity import StorzBickelEntity
@@ -29,11 +29,7 @@ async def async_setup_entry(
     coordinator = runtime.coordinator
     entities: list[BinarySensorEntity] = []
 
-    dt = (
-        device_type_slug(coordinator.data.get("device_type"))
-        if coordinator.data
-        else None
-    )
+    dt = coordinator.device_slug()
 
     if dt == DEVICE_TYPE_CRAFTY:
         entities.append(ChargingBinarySensor(coordinator))
@@ -54,7 +50,8 @@ class ChargingBinarySensor(StorzBickelEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool | None:
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return None
-        charging = getattr(self.coordinator.data["state"], "charging", None)
+        charging = getattr(state, "charging", None)
         return bool(charging) if charging is not None else None

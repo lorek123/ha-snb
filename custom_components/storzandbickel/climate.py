@@ -59,23 +59,25 @@ class StorzBickelClimateEntity(StorzBickelEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return None
-        return self.coordinator.data["state"].current_temperature
+        return state.current_temperature
 
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return None
-        return self.coordinator.data["state"].target_temperature
+        return state.target_temperature
 
     @property
     def hvac_mode(self) -> HVACMode:
         """Return current HVAC mode."""
-        if not self.coordinator.data or not self.coordinator.data.get("state"):
+        state = self.device_state
+        if state is None:
             return HVACMode.OFF
-        state = self.coordinator.data["state"]
         if isinstance(state, VentyState):
             return (
                 HVACMode.HEAT if state.heater_mode != HeaterMode.OFF else HVACMode.OFF
