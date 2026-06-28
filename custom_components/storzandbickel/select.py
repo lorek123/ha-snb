@@ -54,8 +54,4 @@ class VolcanoWorkflowPresetSelect(StorzBickelEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         if option not in VOLCANO_WORKFLOW_PRESETS:
             return
-        if self.coordinator.device and hasattr(
-            self.coordinator.device, "run_workflow_preset"
-        ):
-            await self.coordinator.device.run_workflow_preset(option)
-            await self.coordinator.async_request_refresh()
+        await self._async_call_device("run_workflow_preset", option)

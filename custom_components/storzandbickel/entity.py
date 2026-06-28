@@ -31,6 +31,25 @@ class StorzBickelEntity(CoordinatorEntity[StorzBickelDataUpdateCoordinator], Ent
         data = self.coordinator.data
         return data.get("state") if data else None
 
+    async def _async_call_device(
+        self, method: str, *args: Any, refresh: bool = True
+    ) -> None:
+        """Call a device coroutine by name if present, then refresh.
+
+        Almost every action entity follows the same shape: confirm the device is
+        connected and actually exposes the method (it varies by model and library
+        version, hence the `hasattr` guard), await it, then ask the coordinator to
+        refresh so the new state lands. Centralizing it keeps each feature down to a
+        single declarative line. Pass refresh=False for fire-and-forget actions
+        (e.g. find-device) that don't change polled state.
+        """
+        device = self.coordinator.device
+        if device is None or not hasattr(device, method):
+            return
+        await getattr(device, method)(*args)
+        if refresh:
+            await self.coordinator.async_request_refresh()
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return dynamic device info for richer Device page details."""

@@ -94,93 +94,58 @@ class AirPumpSwitch(StorzBickelEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
 
-class VibrationSwitch(StorzBickelEntity, SwitchEntity):
+class _FlagSwitch(StorzBickelEntity, SwitchEntity):
+    """Base for boolean device flags read from state and toggled via a setter.
+
+    Vibration, superboost, and boost-timeout are the same switch wearing different
+    labels: read one boolean off the coordinator state, write it with one device
+    coroutine. Subclasses declare the three names below; all the plumbing —
+    presence guard, getattr read, guarded setter call — lives here once.
+    """
+
+    _flag_key: str  # config-entry unique-id suffix and translation key
+    _state_attr: str  # attribute read from the coordinator state object
+    _setter: str  # device coroutine that writes the flag
+
+    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_{self._flag_key}"
+        self._attr_translation_key = self._flag_key
+
+    @property
+    def is_on(self) -> bool:
+        state = self.device_state
+        if state is None:
+            return False
+        return bool(getattr(state, self._state_attr, False))
+
+    async def async_turn_on(self, **kwargs) -> None:
+        await self._async_call_device(self._setter, True)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        await self._async_call_device(self._setter, False)
+
+
+class VibrationSwitch(_FlagSwitch):
     """Enable/disable vibration (Venty/Veazy)."""
 
-    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.entry.entry_id}_vibration"
-        self._attr_translation_key = "vibration"
-
-    @property
-    def is_on(self) -> bool:
-        state = self.device_state
-        if state is None:
-            return False
-        return bool(getattr(state, "vibration_enabled", False))
-
-    async def async_turn_on(self, **kwargs) -> None:
-        if self.coordinator.device and hasattr(
-            self.coordinator.device, "set_vibration"
-        ):
-            await self.coordinator.device.set_vibration(True)
-            await self.coordinator.async_request_refresh()
-
-    async def async_turn_off(self, **kwargs) -> None:
-        if self.coordinator.device and hasattr(
-            self.coordinator.device, "set_vibration"
-        ):
-            await self.coordinator.device.set_vibration(False)
-            await self.coordinator.async_request_refresh()
+    _flag_key = "vibration"
+    _state_attr = "vibration_enabled"
+    _setter = "set_vibration"
 
 
-class SuperboostSwitch(StorzBickelEntity, SwitchEntity):
+class SuperboostSwitch(_FlagSwitch):
     """Enable/disable superboost mode on Crafty."""
 
-    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.entry.entry_id}_superboost"
-        self._attr_translation_key = "superboost"
-
-    @property
-    def is_on(self) -> bool:
-        state = self.device_state
-        if state is None:
-            return False
-        return bool(getattr(state, "superboost_mode", False))
-
-    async def async_turn_on(self, **kwargs) -> None:
-        if self.coordinator.device and hasattr(
-            self.coordinator.device, "set_superboost"
-        ):
-            await self.coordinator.device.set_superboost(True)
-            await self.coordinator.async_request_refresh()
-
-    async def async_turn_off(self, **kwargs) -> None:
-        if self.coordinator.device and hasattr(
-            self.coordinator.device, "set_superboost"
-        ):
-            await self.coordinator.device.set_superboost(False)
-            await self.coordinator.async_request_refresh()
+    _flag_key = "superboost"
+    _state_attr = "superboost_mode"
+    _setter = "set_superboost"
 
 
-class BoostTimeoutDisabledSwitch(StorzBickelEntity, SwitchEntity):
+class BoostTimeoutDisabledSwitch(_FlagSwitch):
     """Enable/disable boost timeout disable flag (Venty/Veazy)."""
 
     _attr_entity_category = EntityCategory.CONFIG
-
-    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.entry.entry_id}_boost_timeout_disabled"
-        self._attr_translation_key = "boost_timeout_disabled"
-
-    @property
-    def is_on(self) -> bool:
-        state = self.device_state
-        if state is None:
-            return False
-        return bool(getattr(state, "boost_timeout_disabled", False))
-
-    async def async_turn_on(self, **kwargs) -> None:
-        if self.coordinator.device and hasattr(
-            self.coordinator.device, "set_boost_timeout_disabled"
-        ):
-            await self.coordinator.device.set_boost_timeout_disabled(True)
-            await self.coordinator.async_request_refresh()
-
-    async def async_turn_off(self, **kwargs) -> None:
-        if self.coordinator.device and hasattr(
-            self.coordinator.device, "set_boost_timeout_disabled"
-        ):
-            await self.coordinator.device.set_boost_timeout_disabled(False)
-            await self.coordinator.async_request_refresh()
+    _flag_key = "boost_timeout_disabled"
+    _state_attr = "boost_timeout_disabled"
+    _setter = "set_boost_timeout_disabled"

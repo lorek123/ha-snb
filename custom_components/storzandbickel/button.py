@@ -51,11 +51,7 @@ class BoostModeButton(StorzBickelEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        if self.coordinator.device and hasattr(
-            self.coordinator.device, "toggle_boost_mode"
-        ):
-            await self.coordinator.device.toggle_boost_mode()
-            await self.coordinator.async_request_refresh()
+        await self._async_call_device("toggle_boost_mode")
 
 
 class FindDeviceButton(StorzBickelEntity, ButtonEntity):
@@ -67,8 +63,7 @@ class FindDeviceButton(StorzBickelEntity, ButtonEntity):
         self._attr_translation_key = "find_device"
 
     async def async_press(self) -> None:
-        if self.coordinator.device and hasattr(self.coordinator.device, "find_device"):
-            await self.coordinator.device.find_device()
+        await self._async_call_device("find_device", refresh=False)
 
 
 class ReconnectButton(StorzBickelEntity, ButtonEntity):

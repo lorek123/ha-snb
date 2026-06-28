@@ -49,30 +49,33 @@ def normalize_mac_address(address: str) -> str:
     return ":".join(normalized[i : i + 2] for i in range(0, len(normalized), 2))
 
 
+async def _scan_for_device(address: str) -> Any:
+    """Scan for nearby S&B devices and return the one matching address, if present.
+
+    The "instantiate a client, scan, match by address" sequence is shared by manual
+    entry, bluetooth discovery confirmation, and validate_input; keeping it in one
+    place means they can't drift on scan timeout or address comparison.
+    """
+    client = StorzBickelClient()
+    devices = await client.scan(timeout=5.0)
+    return next((d for d in devices if d.address.upper() == address.upper()), None)
+
+
 async def validate_input(
     hass: HomeAssistant, data: dict[str, Any], skip_scan: bool = False
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-    address = data[CONF_DEVICE_ADDRESS]
-
-    # Normalize MAC address
-    address = normalize_mac_address(address)
-
-    client = StorzBickelClient()
+    address = normalize_mac_address(data[CONF_DEVICE_ADDRESS])
 
     if skip_scan:
-        # For manual entry, we'll try to connect directly
-        # We'll validate the device type when we connect
+        # Manual entry: accept as-is; device type is verified on first connect.
         return {
             CONF_DEVICE_NAME: data.get(CONF_DEVICE_NAME, address),
             CONF_DEVICE_ADDRESS: address,
             CONF_DEVICE_TYPE: data.get(CONF_DEVICE_TYPE, "unknown"),
         }
 
-    # For scanned devices, verify it's still available
-    devices = await client.scan(timeout=5.0)
-    device = next((d for d in devices if d.address.upper() == address.upper()), None)
-
+    device = await _scan_for_device(address)
     if not device:
         raise ValueError("Device not found")
 
@@ -229,16 +232,7 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     device_name = user_input.get(CONF_DEVICE_NAME, normalized_address)
 
                     # Try to scan to get device info if available
-                    client = StorzBickelClient()
-                    devices = await client.scan(timeout=5.0)
-                    device = next(
-                        (
-                            d
-                            for d in devices
-                            if d.address.upper() == normalized_address.upper()
-                        ),
-                        None,
-                    )
+                    device = await _scan_for_device(normalized_address)
 
                     if device:
                         # Device found, use its info
@@ -293,9 +287,7 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_DEVICE_ADDRESS: discovery_info.address})
 
         # Check if this is a Storz & Bickel device
-        client = StorzBickelClient()
-        devices = await client.scan(timeout=5.0)
-        device = next((d for d in devices if d.address == discovery_info.address), None)
+        device = await _scan_for_device(discovery_info.address)
 
         if not device:
             return self.async_abort(reason="not_supported")

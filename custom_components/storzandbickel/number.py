@@ -64,11 +64,7 @@ class BrightnessNumber(StorzBickelEntity, NumberEntity):
         return getattr(state, "brightness", None)
 
     async def async_set_native_value(self, value: float) -> None:
-        if self.coordinator.device and hasattr(
-            self.coordinator.device, "set_brightness"
-        ):
-            await self.coordinator.device.set_brightness(int(value))
-            await self.coordinator.async_request_refresh()
+        await self._async_call_device("set_brightness", int(value))
 
 
 class CraftyBoostTemperatureNumber(StorzBickelEntity, NumberEntity):
@@ -96,12 +92,7 @@ class CraftyBoostTemperatureNumber(StorzBickelEntity, NumberEntity):
         return None
 
     async def async_set_native_value(self, value: float) -> None:
-        if not self.coordinator.device:
-            return
-        device = self.coordinator.device
-        if hasattr(device, "set_boost_temperature"):
-            await device.set_boost_temperature(float(value))
-            await self.coordinator.async_request_refresh()
+        await self._async_call_device("set_boost_temperature", float(value))
 
 
 class CraftyLedBrightnessNumber(StorzBickelEntity, NumberEntity):
@@ -126,11 +117,7 @@ class CraftyLedBrightnessNumber(StorzBickelEntity, NumberEntity):
         return getattr(state, "led_brightness", None)
 
     async def async_set_native_value(self, value: float) -> None:
-        if self.coordinator.device and hasattr(
-            self.coordinator.device, "set_led_brightness"
-        ):
-            await self.coordinator.device.set_led_brightness(int(value))
-            await self.coordinator.async_request_refresh()
+        await self._async_call_device("set_led_brightness", int(value))
 
 
 class CraftyAutoOffNumber(StorzBickelEntity, NumberEntity):
@@ -155,8 +142,4 @@ class CraftyAutoOffNumber(StorzBickelEntity, NumberEntity):
         return getattr(state, "auto_off_time", None)
 
     async def async_set_native_value(self, value: float) -> None:
-        if self.coordinator.device and hasattr(
-            self.coordinator.device, "set_auto_off_time"
-        ):
-            await self.coordinator.device.set_auto_off_time(int(value))
-            await self.coordinator.async_request_refresh()
+        await self._async_call_device("set_auto_off_time", int(value))
