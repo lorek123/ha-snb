@@ -123,6 +123,8 @@ async def test_number_platform(
     [
         (DeviceType.VOLCANO, 1),
         (DeviceType.CRAFTY, 0),
+        (DeviceType.VENTY, 1),
+        (DeviceType.VEAZY, 1),
     ],
 )
 async def test_select_platform(

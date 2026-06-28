@@ -1,16 +1,22 @@
 """Test the select platform."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from storzandbickel_ble.models import DeviceState, DeviceType
+from storzandbickel_ble.models import DeviceState, DeviceType, HeaterMode
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from custom_components.storzandbickel.coordinator import StorzBickelDataUpdateCoordinator
-from custom_components.storzandbickel.select import VolcanoWorkflowPresetSelect
+from custom_components.storzandbickel.coordinator import (
+    StorzBickelDataUpdateCoordinator,
+)
+from custom_components.storzandbickel.select import (
+    VentyHeaterModeSelect,
+    VolcanoWorkflowPresetSelect,
+)
 
 
 @pytest.fixture
@@ -46,3 +52,33 @@ class TestVolcanoWorkflowPresetSelect:
         await sel.async_select_option("not_a_preset")
         device.run_workflow_preset.assert_not_called()
 
+
+class TestVentyHeaterModeSelect:
+    @pytest.fixture
+    def coord(self, hass: HomeAssistant, mock_entry):
+        state = MagicMock(spec=DeviceState)
+        state.heater_mode = HeaterMode.BOOST
+        c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        c.device = AsyncMock()
+        c.device.set_heater_mode = AsyncMock()
+        c.data = {"state": state, "device_type": DeviceType.VENTY}
+        return c
+
+    def test_current_option(self, coord):
+        assert VentyHeaterModeSelect(coord).current_option == "boost"
+
+    def test_current_option_off_is_none(self, coord):
+        coord.data["state"].heater_mode = HeaterMode.OFF
+        assert VentyHeaterModeSelect(coord).current_option is None
+
+    def test_current_option_no_data(self, coord):
+        coord.data = None
+        assert VentyHeaterModeSelect(coord).current_option is None
+
+    async def test_select_option(self, coord):
+        await VentyHeaterModeSelect(coord).async_select_option("superboost")
+        coord.device.set_heater_mode.assert_called_once_with(HeaterMode.SUPERBOOST)
+
+    async def test_select_invalid_noop(self, coord):
+        await VentyHeaterModeSelect(coord).async_select_option("nope")
+        coord.device.set_heater_mode.assert_not_called()

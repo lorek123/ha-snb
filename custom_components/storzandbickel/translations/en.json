@@ -166,6 +166,14 @@
     "select": {
       "workflow_preset": {
         "name": "Workflow preset"
+      },
+      "heater_mode": {
+        "name": "Heater mode",
+        "state": {
+          "normal": "Normal",
+          "boost": "Boost",
+          "superboost": "Superboost"
+        }
       }
     }
   }
