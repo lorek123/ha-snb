@@ -12,7 +12,6 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
 from custom_components.storzandbickel.climate import StorzBickelClimateEntity
-from custom_components.storzandbickel.const import DOMAIN
 from custom_components.storzandbickel.coordinator import StorzBickelDataUpdateCoordinator
 
 

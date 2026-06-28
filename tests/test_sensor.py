@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from custom_components.storzandbickel.const import DOMAIN
 from custom_components.storzandbickel.coordinator import StorzBickelDataUpdateCoordinator
 from custom_components.storzandbickel.sensor import (
     BatteryLevelSensor,

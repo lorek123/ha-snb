@@ -18,7 +18,6 @@ from custom_components.storzandbickel.const import (
     CONF_DEVICE_ADDRESS,
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
-    DOMAIN,
 )
 from custom_components.storzandbickel.coordinator import StorzBickelDataUpdateCoordinator
 

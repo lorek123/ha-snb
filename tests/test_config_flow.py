@@ -16,7 +16,6 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 # It's patched in tests where needed
 
 from custom_components.storzandbickel.config_flow import (
-    StorzBickelConfigFlow,
     normalize_mac_address,
     validate_input,
     validate_mac_address,
