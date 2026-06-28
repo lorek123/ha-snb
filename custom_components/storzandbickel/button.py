@@ -33,8 +33,12 @@ async def async_setup_entry(
     ]
 
     dt = coordinator.device_slug()
-    if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
+    # Boost is a momentary toggle only on Crafty (toggle_boost_mode). Venty/Veazy
+    # boost is a heater mode, not a toggle, so no boost button there (yet).
+    if dt == DEVICE_TYPE_CRAFTY:
         entities.append(BoostModeButton(coordinator))
+
+    if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(FindDeviceButton(coordinator))
 
     async_add_entities(entities)
