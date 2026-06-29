@@ -1,0 +1,11 @@
+run_analysis:
+  name: Run analysis
+  description: >-
+    Run the device's on-board diagnostics and return a report: overall status,
+    heuristic warnings, detected error flags, and raw register/history values.
+    Per-bit error meanings are decoded by Storz & Bickel's servers, so the
+    report flags which error bits are set rather than naming each cause.
+  target:
+    entity:
+      integration: storzandbickel
+      domain: climate

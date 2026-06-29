@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from storzandbickel_ble.models import DeviceType
@@ -93,7 +93,12 @@ async def test_binary_sensor_platform(
 async def test_climate_platform_adds_one(hass: HomeAssistant, flow_entry: MagicMock):
     _coord(hass, flow_entry, DeviceType.CRAFTY)
     added = MagicMock()
-    await climate.async_setup_entry(hass, flow_entry, added)
+    # async_setup_entry registers an entity service, which needs a platform context.
+    with patch(
+        "custom_components.storzandbickel.climate.entity_platform"
+        ".async_get_current_platform"
+    ):
+        await climate.async_setup_entry(hass, flow_entry, added)
     assert len(added.call_args[0][0]) == 1
 
 

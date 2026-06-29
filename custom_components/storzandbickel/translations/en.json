@@ -182,5 +182,11 @@
         }
       }
     }
+  },
+  "services": {
+    "run_analysis": {
+      "name": "Run analysis",
+      "description": "Run the device's on-board diagnostics and return a report: overall status, warnings, detected error flags, and raw register/history values."
+    }
   }
 }

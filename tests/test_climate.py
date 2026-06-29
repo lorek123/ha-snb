@@ -1,4 +1,5 @@
 """Test the climate platform."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -10,9 +11,12 @@ from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from custom_components.storzandbickel.climate import StorzBickelClimateEntity
-from custom_components.storzandbickel.coordinator import StorzBickelDataUpdateCoordinator
+from custom_components.storzandbickel.coordinator import (
+    StorzBickelDataUpdateCoordinator,
+)
 
 
 @pytest.fixture
@@ -200,3 +204,25 @@ class TestStorzBickelClimateEntityVenty:
         entity = StorzBickelClimateEntity(venty_coordinator)
         venty_coordinator.data["state"].heater_mode = HeaterMode.BOOST
         assert entity.hvac_mode == HVACMode.HEAT
+
+
+async def test_async_run_analysis_returns_report(coordinator):
+    """The run_analysis action forwards the device's report as response data."""
+    coordinator.device.run_analysis = AsyncMock(
+        return_value={"ok": True, "warnings": [], "findings": [], "diagnostics": {}}
+    )
+    entity = StorzBickelClimateEntity(coordinator)
+
+    result = await entity.async_run_analysis()
+
+    assert result["ok"] is True
+    coordinator.device.run_analysis.assert_awaited_once()
+
+
+async def test_async_run_analysis_raises_when_disconnected(coordinator):
+    """With no connected device the action raises instead of returning junk."""
+    coordinator.device = None
+    entity = StorzBickelClimateEntity(coordinator)
+
+    with pytest.raises(HomeAssistantError):
+        await entity.async_run_analysis()

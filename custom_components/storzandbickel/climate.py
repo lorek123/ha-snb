@@ -8,7 +8,9 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from storzandbickel_ble.models import HeaterMode, VentyState
@@ -34,6 +36,14 @@ async def async_setup_entry(
     runtime: StorzBickelRuntimeData = entry.runtime_data
     coordinator = runtime.coordinator
     async_add_entities([StorzBickelClimateEntity(coordinator)])
+
+    # On-demand device diagnostics report, returned as action response data.
+    entity_platform.async_get_current_platform().async_register_entity_service(
+        "run_analysis",
+        {},
+        "async_run_analysis",
+        supports_response=SupportsResponse.ONLY,
+    )
 
 
 class StorzBickelClimateEntity(StorzBickelEntity, ClimateEntity):
@@ -104,3 +114,14 @@ class StorzBickelClimateEntity(StorzBickelEntity, ClimateEntity):
             await self.coordinator.device.turn_heater_off()
 
         await self.coordinator.async_request_refresh()
+
+    async def async_run_analysis(self) -> ServiceResponse:
+        """Run the device's on-board diagnostics and return the report.
+
+        Backs the `storzandbickel.run_analysis` action. Returns the library's
+        analysis dict (ok/warnings/errors/findings/diagnostics) as response data.
+        """
+        device = self.coordinator.device
+        if device is None:
+            raise HomeAssistantError("Device is not connected")
+        return await device.run_analysis()
