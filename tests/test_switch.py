@@ -17,9 +17,11 @@ from custom_components.storzandbickel.switch import (
     AirPumpSwitch,
     BoostTimeoutDisabledSwitch,
     BoostVisualizationSwitch,
+    ChargeLedSwitch,
     DisplayOnCoolingSwitch,
     EcoChargeSwitch,
     EcoVoltageSwitch,
+    PermanentBluetoothSwitch,
     SuperboostSwitch,
     VibrationOnReadySwitch,
     VibrationSwitch,
@@ -366,3 +368,40 @@ class TestEcoSwitches:
     async def test_boost_visualization_turn_on(self, coord):
         await BoostVisualizationSwitch(coord).async_turn_on()
         coord.device.set_boost_visualization.assert_called_with(True)
+
+
+class TestCraftyProjectSwitches:
+    @pytest.fixture
+    def coord(self, hass, mock_entry):
+        state = MagicMock(spec=DeviceState)
+        state.charge_led_enabled = True
+        state.permanent_bluetooth = False
+        c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        c.data = {"state": state, "device_type": DeviceType.CRAFTY}
+        c.device = MagicMock()
+        c.device.set_charge_led = AsyncMock()
+        c.device.set_permanent_bluetooth = AsyncMock()
+        c.async_request_refresh = AsyncMock()
+        return c
+
+    def test_charge_led_unique_id(self, coord):
+        assert ChargeLedSwitch(coord)._attr_unique_id == "test-entry_charge_led"
+
+    def test_charge_led_is_on(self, coord):
+        assert ChargeLedSwitch(coord).is_on is True
+        coord.data["state"].charge_led_enabled = False
+        assert ChargeLedSwitch(coord).is_on is False
+
+    async def test_charge_led_turn_off(self, coord):
+        await ChargeLedSwitch(coord).async_turn_off()
+        coord.device.set_charge_led.assert_called_with(False)
+
+    def test_permanent_bluetooth_is_on(self, coord):
+        assert PermanentBluetoothSwitch(coord).is_on is False
+
+    async def test_permanent_bluetooth_turn_on_off(self, coord):
+        sw = PermanentBluetoothSwitch(coord)
+        await sw.async_turn_on()
+        coord.device.set_permanent_bluetooth.assert_called_with(True)
+        await sw.async_turn_off()
+        coord.device.set_permanent_bluetooth.assert_called_with(False)

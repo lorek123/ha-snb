@@ -11,7 +11,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_TYPE_VEAZY, DEVICE_TYPE_VENTY
+from .const import DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VEAZY, DEVICE_TYPE_VENTY
 from .coordinator import StorzBickelDataUpdateCoordinator
 from .data import StorzBickelRuntimeData
 from .entity import StorzBickelEntity
@@ -33,7 +33,9 @@ async def async_setup_entry(
 
     if dt in [DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(VentyChargingBinarySensor(coordinator))
-        entities.append(VentyReadyBinarySensor(coordinator))
+
+    if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
+        entities.append(ReadyBinarySensor(coordinator))
 
     async_add_entities(entities)
 
@@ -58,8 +60,8 @@ class VentyChargingBinarySensor(StorzBickelEntity, BinarySensorEntity):
         return bool(charging) if charging is not None else None
 
 
-class VentyReadyBinarySensor(StorzBickelEntity, BinarySensorEntity):
-    """Setpoint reached / ready to use for Venty/Veazy."""
+class ReadyBinarySensor(StorzBickelEntity, BinarySensorEntity):
+    """Setpoint reached / ready to use (Crafty/Venty/Veazy)."""
 
     def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
         super().__init__(coordinator)

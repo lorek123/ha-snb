@@ -11,8 +11,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from custom_components.storzandbickel.binary_sensor import (
+    ReadyBinarySensor,
     VentyChargingBinarySensor,
-    VentyReadyBinarySensor,
 )
 from custom_components.storzandbickel.coordinator import (
     StorzBickelDataUpdateCoordinator,
@@ -58,18 +58,24 @@ class TestVentyChargingBinarySensor:
         assert VentyChargingBinarySensor(venty_coordinator).is_on is None
 
 
-class TestVentyReadyBinarySensor:
+class TestReadyBinarySensor:
     def test_unique_id(self, venty_coordinator):
         assert (
-            VentyReadyBinarySensor(venty_coordinator)._attr_unique_id
-            == "test-entry_ready"
+            ReadyBinarySensor(venty_coordinator)._attr_unique_id == "test-entry_ready"
         )
 
     def test_reflects_setpoint_reached(self, venty_coordinator):
-        assert VentyReadyBinarySensor(venty_coordinator).is_on is False
+        assert ReadyBinarySensor(venty_coordinator).is_on is False
         venty_coordinator.data["state"].setpoint_reached = True
-        assert VentyReadyBinarySensor(venty_coordinator).is_on is True
+        assert ReadyBinarySensor(venty_coordinator).is_on is True
 
     def test_none_when_no_data(self, venty_coordinator):
         venty_coordinator.data = None
-        assert VentyReadyBinarySensor(venty_coordinator).is_on is None
+        assert ReadyBinarySensor(venty_coordinator).is_on is None
+
+    def test_crafty_setpoint_reached(self, hass: HomeAssistant, mock_entry):
+        state = MagicMock(spec=DeviceState)
+        state.setpoint_reached = True
+        coord = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        coord.data = {"state": state, "device_type": DeviceType.CRAFTY}
+        assert ReadyBinarySensor(coord).is_on is True

@@ -127,6 +127,12 @@
       },
       "boost_visualization": {
         "name": "Boost visualization"
+      },
+      "charge_led": {
+        "name": "Charge LED"
+      },
+      "permanent_bluetooth": {
+        "name": "Permanent Bluetooth"
       }
     },
     "button": {

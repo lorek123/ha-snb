@@ -52,6 +52,8 @@ async def async_setup_entry(
 
     if dt == DEVICE_TYPE_CRAFTY:
         entities.append(SuperboostSwitch(coordinator))
+        entities.append(ChargeLedSwitch(coordinator))
+        entities.append(PermanentBluetoothSwitch(coordinator))
 
     async_add_entities(entities)
 
@@ -201,3 +203,21 @@ class BoostVisualizationSwitch(_FlagSwitch):
     _flag_key = "boost_visualization"
     _state_attr = "boost_visualization"
     _setter = "set_boost_visualization"
+
+
+class ChargeLedSwitch(_FlagSwitch):
+    """Enable/disable the charge-indicator LED (Crafty)."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _flag_key = "charge_led"
+    _state_attr = "charge_led_enabled"
+    _setter = "set_charge_led"
+
+
+class PermanentBluetoothSwitch(_FlagSwitch):
+    """Keep Bluetooth reachable while the device sleeps (Crafty)."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _flag_key = "permanent_bluetooth"
+    _state_attr = "permanent_bluetooth"
+    _setter = "set_permanent_bluetooth"
