@@ -226,3 +226,38 @@ async def test_async_run_analysis_raises_when_disconnected(coordinator):
 
     with pytest.raises(HomeAssistantError):
         await entity.async_run_analysis()
+
+
+async def test_async_run_workflow_forwards_steps(coordinator):
+    """The run_workflow action maps step dicts to (temp, hold, pump) tuples."""
+    coordinator.device.run_workflow = AsyncMock()
+    entity = StorzBickelClimateEntity(coordinator)
+    steps = [
+        {"temperature": 185.0, "hold_seconds": 10.0, "pump_seconds": 8.0},
+        {"temperature": 200.0, "hold_seconds": 0.0, "pump_seconds": 12.0},
+    ]
+
+    await entity.async_run_workflow(steps)
+
+    coordinator.device.run_workflow.assert_awaited_once_with(
+        [(185.0, 10.0, 8.0), (200.0, 0.0, 12.0)]
+    )
+
+
+async def test_async_run_workflow_raises_when_disconnected(coordinator):
+    coordinator.device = None
+    entity = StorzBickelClimateEntity(coordinator)
+    with pytest.raises(HomeAssistantError):
+        await entity.async_run_workflow(
+            [{"temperature": 180.0, "hold_seconds": 0.0, "pump_seconds": 5.0}]
+        )
+
+
+async def test_async_run_workflow_unsupported_device(coordinator):
+    """A non-Volcano device (no run_workflow) raises a clear error."""
+    coordinator.device = object()
+    entity = StorzBickelClimateEntity(coordinator)
+    with pytest.raises(HomeAssistantError, match="only supported on the Volcano"):
+        await entity.async_run_workflow(
+            [{"temperature": 180.0, "hold_seconds": 0.0, "pump_seconds": 5.0}]
+        )

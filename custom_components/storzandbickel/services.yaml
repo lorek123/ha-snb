@@ -9,3 +9,30 @@ run_analysis:
     entity:
       integration: storzandbickel
       domain: climate
+
+run_workflow:
+  name: Run workflow
+  description: >-
+    Run a custom Volcano workflow: a sequence of timed heat-and-pump steps. Each
+    step sets a temperature, optionally waits for it, holds, then runs the pump.
+    Blocks until the sequence completes; watch the climate and air-pump entities
+    for progress. Volcano only.
+  target:
+    entity:
+      integration: storzandbickel
+      domain: climate
+  fields:
+    steps:
+      name: Steps
+      description: >-
+        Ordered list of steps. Each item: temperature (°C, required) plus
+        optional hold_seconds (default 0) and pump_seconds (default 5).
+      required: true
+      example: |
+        - temperature: 185
+          hold_seconds: 10
+          pump_seconds: 8
+        - temperature: 200
+          pump_seconds: 12
+      selector:
+        object:

@@ -187,6 +187,16 @@
     "run_analysis": {
       "name": "Run analysis",
       "description": "Run the device's on-board diagnostics and return a report: overall status, warnings, detected error flags, and raw register/history values."
+    },
+    "run_workflow": {
+      "name": "Run workflow",
+      "description": "Run a custom Volcano workflow: a sequence of timed heat-and-pump steps (Volcano only). Blocks until the sequence completes.",
+      "fields": {
+        "steps": {
+          "name": "Steps",
+          "description": "Ordered list of steps; each has a temperature (degC) and optional hold_seconds and pump_seconds."
+        }
+      }
     }
   }
 }

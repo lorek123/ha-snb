@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.config_entries import ConfigEntry
@@ -37,12 +39,33 @@ async def async_setup_entry(
     coordinator = runtime.coordinator
     async_add_entities([StorzBickelClimateEntity(coordinator)])
 
+    platform = entity_platform.async_get_current_platform()
     # On-demand device diagnostics report, returned as action response data.
-    entity_platform.async_get_current_platform().async_register_entity_service(
+    platform.async_register_entity_service(
         "run_analysis",
         {},
         "async_run_analysis",
         supports_response=SupportsResponse.ONLY,
+    )
+    # Custom Volcano workflow: a sequence of timed heat+pump steps.
+    platform.async_register_entity_service(
+        "run_workflow",
+        {
+            vol.Required("steps"): [
+                {
+                    vol.Required("temperature"): vol.All(
+                        vol.Coerce(float), vol.Range(min=TEMP_MIN, max=TEMP_MAX)
+                    ),
+                    vol.Optional("hold_seconds", default=0): vol.All(
+                        vol.Coerce(float), vol.Range(min=0)
+                    ),
+                    vol.Optional("pump_seconds", default=5): vol.All(
+                        vol.Coerce(float), vol.Range(min=0)
+                    ),
+                }
+            ],
+        },
+        "async_run_workflow",
     )
 
 
@@ -125,3 +148,19 @@ class StorzBickelClimateEntity(StorzBickelEntity, ClimateEntity):
         if device is None:
             raise HomeAssistantError("Device is not connected")
         return await device.run_analysis()
+
+    async def async_run_workflow(self, steps: list[dict[str, float]]) -> None:
+        """Run a custom Volcano workflow (timed heat+pump steps).
+
+        Backs the `storzandbickel.run_workflow` action. Blocks until the sequence
+        finishes (like the workflow-preset select), so callers can await
+        completion or run it from a script.
+        """
+        device = self.coordinator.device
+        if device is None:
+            raise HomeAssistantError("Device is not connected")
+        if not hasattr(device, "run_workflow"):
+            raise HomeAssistantError("Workflows are only supported on the Volcano")
+        await device.run_workflow(
+            [(s["temperature"], s["hold_seconds"], s["pump_seconds"]) for s in steps]
+        )
