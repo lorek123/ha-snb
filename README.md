@@ -6,23 +6,24 @@ Home Assistant integration for controlling Storz & Bickel vaporizers (Volcano Hy
 
 ## Features
 
-- **Full Device Support**: Control Volcano Hybrid, Venty, Veazy, and Crafty/Crafty+ devices (one Bluetooth device per config entry)
-- **Climate Control**: Set target temperature and control heater
-- **Temperature Monitoring**: Real-time current temperature sensor
-- **Battery Monitoring**: Battery level sensor for portable devices (Crafty/Crafty+, Venty)
-- **Air Pump Control**: Switch for Volcano Hybrid air pump
-- **Boost Mode**: Button to activate boost mode on supported devices
-- **Connection Tools**: Reconnect and refresh buttons for quick recovery without reloading the integration
-- **Auto-Discovery**: Automatic device discovery via Bluetooth
+- **All devices**: Volcano Hybrid, Venty, Veazy, and Crafty/Crafty+ (one Bluetooth device per config entry), with automatic Bluetooth discovery.
+- **Climate control**: target temperature, heater on/off, and real-time current-temperature reporting.
+- **Full settings surface**: LED/display brightness, auto-off timers, vibration, boost/superboost offsets, ECO charging modes, display-on-cooling, charge-LED and permanent-Bluetooth, and more — exposed as numbers, switches, and selects per device.
+- **Volcano workflows**: built-in presets (balloon / flow 1–3) **plus a custom workflow action** for your own timed heat-and-pump sequences.
+- **Diagnostics action**: on-demand `run_analysis` that returns device status, detected error flags, and raw registers as action **response data**.
+- **Status sensors**: temperature, battery, charging, "ready" (at-temperature), usage time, connection state, and signal strength.
+- **Recovery tools**: reconnect/refresh buttons plus connection backoff, so a device that's off or out of range doesn't spam the Bluetooth proxy.
 
 ## Supported Devices
 
-| Device         | Temperature Control | Heater Control | Battery | Air Pump | Boost Mode |
-| -------------- | ------------------- | -------------- | ------- | -------- | ---------- |
-| Volcano Hybrid | ✅                   | ✅              | ❌       | ✅        | ❌          |
-| Venty          | ✅                   | ✅              | ✅       | ❌        | ✅          |
-| Veazy          | ✅                   | ✅              | ✅       | ❌        | ✅          |
-| Crafty/Crafty+ | ✅                   | ✅              | ✅       | ❌        | ✅          |
+| Device         | Climate | Battery | Charging sensor | Air pump | Boost / Superboost      | Workflows          | Diagnostics |
+| -------------- | :-----: | :-----: | :-------------: | :------: | ----------------------- | ------------------ | :---------: |
+| Volcano Hybrid | ✅       | —       | —               | ✅        | —                       | ✅ presets + custom | ✅           |
+| Venty          | ✅       | ✅       | ✅               | —        | ✅ offsets + heater mode | —                  | ✅           |
+| Veazy          | ✅       | ✅       | ✅               | —        | ✅ offsets + heater mode | —                  | ✅           |
+| Crafty/Crafty+ | ✅       | ✅       | — (LED only)    | —        | ✅ boost button          | —                  | ✅           |
+
+Entity availability is per-device — see **Entities** below for the full list.
 
 ## Installation
 
@@ -62,36 +63,76 @@ Home Assistant integration for controlling Storz & Bickel vaporizers (Volcano Hy
 
 ## Entities
 
-After setup, the following entities will be created:
+After setup the following entities are created. Availability is per-device — the applicable device(s) are shown in parentheses.
 
-### Climate Entity
-- **Temperature Control**: Set target temperature (40-230°C)
-- **Heater Control**: Turn heater on/off
-- **Current Temperature**: Real-time temperature reading
+### Climate
+- **Temperature / heater** — set target temperature and turn the heater on/off (all).
 
-### Sensor Entities
-- **Current Temperature**: Current device temperature
-- **Battery Level**: Battery percentage (Crafty/Crafty+, Venty, Veazy)
-- **Connection State**: `connected` / `disconnected` diagnostic state
-- **Signal Strength**: BLE RSSI (when provided by the device library)
+### Sensors
+- **Current temperature** (all)
+- **Battery level** (Crafty/Crafty+, Venty, Veazy)
+- **Usage / heating time** (Crafty/Crafty+, Volcano)
+- **Connection state** — `connected` / `disconnected` (all, diagnostic)
+- **Signal strength** — BLE RSSI when provided (all, diagnostic)
 
-### Switch Entities
-- **Air Pump**: Control air pump (Volcano Hybrid only)
+### Binary sensors
+- **Charging** (Venty, Veazy)
+- **Ready** — setpoint reached / at temperature (Crafty/Crafty+, Venty, Veazy)
 
-### Button Entities
-- **Boost Mode**: Activate boost mode (Crafty/Crafty+, Venty, Veazy)
-- **Reconnect**: Force a disconnect/connect cycle and immediate refresh
-- **Refresh**: Trigger an on-demand coordinator refresh
+### Numbers
+- **Brightness** 1–9 (Venty, Veazy)
+- **Boost offset**, **Superboost offset** — degrees above base (Venty, Veazy)
+- **Boost temperature** (Crafty/Crafty+)
+- **LED brightness** — 0–100 (Crafty/Crafty+), 1–9 (Volcano)
+- **Auto-off time** (Crafty/Crafty+, Volcano)
 
-### Number Entities
-- **Brightness** (1–9): Venty, Veazy
-- **Boost temperature**: Crafty/Crafty+
+### Switches
+- **Air pump** (Volcano)
+- **Vibration** (Crafty/Crafty+, Venty, Veazy)
+- **Superboost** (Crafty/Crafty+)
+- **Charge LED**, **Permanent Bluetooth** (Crafty/Crafty+)
+- **Boost timeout disabled**, **ECO charge optimization**, **ECO charge limit** (Venty, Veazy)
+- **Boost visualization** (Venty)
+- **Display on cooling**, **Vibration on ready** (Volcano)
 
-### Select Entities
-- **Workflow preset**: Volcano Hybrid (runs device workflow preset)
+### Selects
+- **Heater mode** — normal / boost / superboost (Venty, Veazy)
+- **Workflow preset** — balloon / flow 1–3 (Volcano)
 
-### Switch Entities (besides air pump)
-- **Vibration**, **Boost timeout disabled**: Venty, Veazy
+### Buttons
+- **Reconnect**, **Refresh** (all)
+- **Find device** (Crafty/Crafty+, Venty, Veazy)
+- **Boost mode** (Crafty/Crafty+)
+
+## Actions
+
+### `storzandbickel.run_analysis`
+
+Runs the device's on-board diagnostics and **returns a report** (overall status, heuristic warnings, detected error flags, and raw register/history values) as action response data. Per-bit error *meanings* are decoded by Storz & Bickel's servers, so the report flags **which** error bits are set rather than naming each cause.
+
+```yaml
+action: storzandbickel.run_analysis
+target:
+  entity_id: climate.my_device_temperature
+response_variable: report
+```
+
+### `storzandbickel.run_workflow` (Volcano)
+
+Runs a **custom Volcano workflow** — a sequence of timed heat-and-pump steps. Each step sets a temperature, optionally waits for it, holds for `hold_seconds`, then runs the pump for `pump_seconds`. Blocks until the sequence finishes (watch the climate and air-pump entities for progress). For the four built-in presets, use the **Workflow preset** select instead.
+
+```yaml
+action: storzandbickel.run_workflow
+target:
+  entity_id: climate.my_volcano_temperature
+data:
+  steps:
+    - temperature: 185
+      hold_seconds: 10
+      pump_seconds: 8
+    - temperature: 200
+      pump_seconds: 12
+```
 
 ## Removal
 
@@ -139,6 +180,8 @@ sensor:
 ```
 
 ### Volcano workflow (entity-only automation)
+
+For most cases the `storzandbickel.run_workflow` action (see **Actions** above) is simpler. If you'd rather orchestrate it yourself with the raw entities — e.g. to add conditions or notifications — this works too:
 
 ```yaml
 script:
@@ -219,13 +262,14 @@ uv run pyright custom_components/storzandbickel
 
 ### Test Structure
 
-- `tests/test_config_flow.py` - Configuration flow tests
-- `tests/test_coordinator.py` - Data coordinator tests
-- `tests/test_climate.py` - Climate entity tests
-- `tests/test_sensor.py` - Sensor entity tests
-- `tests/test_switch.py` - Switch entity tests
-- `tests/test_button.py` - Button entity tests
-- `tests/test_integration.py` - Integration setup/teardown tests
+- `tests/test_config_flow.py` — configuration flow
+- `tests/test_coordinator.py` — data coordinator (connect/poll/backoff)
+- `tests/test_climate.py` — climate entity + `run_analysis` / `run_workflow` actions
+- `tests/test_sensor.py`, `tests/test_binary_sensor.py` — sensors
+- `tests/test_number.py`, `tests/test_switch.py`, `tests/test_select.py`, `tests/test_button.py` — controls
+- `tests/test_platform_setup.py` — per-device entity gating
+- `tests/test_diagnostics.py`, `tests/test_const.py` — diagnostics + helpers
+- `tests/test_integration.py` — integration setup/teardown
 
 ### Quality scale / typing notes
 
