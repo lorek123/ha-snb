@@ -16,7 +16,7 @@ test = [
     "pytest-cov>=7.1.0",
     "pytest-homeassistant-custom-component>=0.13.339",
     "home-assistant-bluetooth>=2.0.0",
-    "serialx==1.8.0",
+    "serialx==1.8.2",
 ]
 # Static typing and linting (also installed in CI).
 dev = [
