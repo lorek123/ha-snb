@@ -12,7 +12,7 @@ dependencies = [
 # Runtime deps are only storzandbickel-ble; tests need HA + bluetooth models for fixtures.
 test = [
     "pytest>=9.0.3",
-    "pytest-asyncio>=0.21.0",
+    "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
     "pytest-homeassistant-custom-component>=0.13.339",
     "home-assistant-bluetooth>=2.0.0",
