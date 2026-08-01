@@ -7,9 +7,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfTime
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -19,8 +23,8 @@ from .const import (
     DEVICE_TYPE_VENTY,
     DEVICE_TYPE_VOLCANO,
 )
-from .data import StorzBickelRuntimeData
 from .coordinator import StorzBickelDataUpdateCoordinator
+from .data import StorzBickelRuntimeData
 from .entity import StorzBickelEntity
 
 PARALLEL_UPDATES = 1

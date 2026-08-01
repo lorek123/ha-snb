@@ -9,16 +9,15 @@ from datetime import timedelta
 from typing import Any
 
 from bleak.exc import BleakError
+from homeassistant.components import bluetooth
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from storzandbickel_ble import StorzBickelClient
 from storzandbickel_ble import exceptions as sb_exc
 from storzandbickel_ble.models import DeviceInfo as SBDeviceInfo
 from storzandbickel_ble.models import DeviceType
 from storzandbickel_ble.protocol import CRAFTY_CHAR_BATTERY, VOLCANO_CHAR_CURRENT_TEMP
-
-from homeassistant.components import bluetooth
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_DEVICE_ADDRESS,
@@ -151,16 +150,18 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
             # Crafty/Volcano only: update_state() swallows per-read errors; a None temperature
             # after a "successful" poll means no live reads — reconnect instead of stale UI.
             state = self.device.state
-            if self.device.device_type in (DeviceType.CRAFTY, DeviceType.VOLCANO):
-                if getattr(state, "current_temperature", None) is None:
-                    _LOGGER.debug(
-                        "Device %s returned no temperature after update; forcing reconnect",
-                        self.device.name or self.entry.data[CONF_DEVICE_ADDRESS],
-                    )
-                    self.device = None
-                    raise UpdateFailed(
-                        "Stale BLE connection: temperature not populated after update_state()"
-                    )
+            if (
+                self.device.device_type in (DeviceType.CRAFTY, DeviceType.VOLCANO)
+                and getattr(state, "current_temperature", None) is None
+            ):
+                _LOGGER.debug(
+                    "Device %s returned no temperature after update; forcing reconnect",
+                    self.device.name or self.entry.data[CONF_DEVICE_ADDRESS],
+                )
+                self.device = None
+                raise UpdateFailed(
+                    "Stale BLE connection: temperature not populated after update_state()"
+                )
             if self._connect_error_logged:
                 _LOGGER.info(
                     "Connection restored to device %s",
@@ -179,7 +180,6 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
             self._log_expected_device_unavailable(err)
             raise
         except (
-            asyncio.TimeoutError,
             TimeoutError,
             ConnectionError,
             sb_exc.StorzBickelError,
@@ -189,7 +189,7 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
             self._log_expected_device_unavailable(err)
             raise UpdateFailed(f"Error communicating with device: {err}") from err
         except Exception as err:
-            _LOGGER.exception("Unexpected error updating device state: %s", err)
+            _LOGGER.exception("Unexpected error updating device state")
             self.device = None
             raise UpdateFailed(f"Error communicating with device: {err}") from err
 
@@ -283,6 +283,6 @@ class StorzBickelDataUpdateCoordinator(DataUpdateCoordinator):
         if self.device:
             try:
                 await self.device.disconnect()
-            except Exception as err:
-                _LOGGER.exception("Error disconnecting device: %s", err)
+            except Exception:
+                _LOGGER.exception("Error disconnecting device")
         await super().async_shutdown()

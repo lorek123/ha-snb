@@ -1,4 +1,5 @@
 """Tests for const helpers."""
+
 from __future__ import annotations
 
 from storzandbickel_ble.models import DeviceType
