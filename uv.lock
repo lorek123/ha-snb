@@ -973,7 +973,7 @@ requires-dist = [
     { name = "pytest-homeassistant-custom-component", marker = "extra == 'test'", specifier = ">=0.13.348" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "serialx", marker = "extra == 'test'", specifier = ">=1.8.2" },
-    { name = "storzandbickel-ble", specifier = ">=0.1.20" },
+    { name = "storzandbickel-ble", specifier = ">=0.1.21" },
 ]
 provides-extras = ["test", "dev"]
 
@@ -2337,16 +2337,16 @@ wheels = [
 
 [[package]]
 name = "storzandbickel-ble"
-version = "0.1.20"
+version = "0.1.21"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "bleak" },
     { name = "bleak-retry-connector" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a4/22/d77b6f4b9074c55be8c00c69896f710e5a115d51c9116cd4951c1a49878d/storzandbickel_ble-0.1.20.tar.gz", hash = "sha256:22d4beb8c403d43daca0be0a69158b08593bb1aba2231359a72dd15d69bd08c1", size = 111398, upload-time = "2026-06-29T19:19:38.529Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/00/92/8be1602da76884a0cb2374fd733139e99c5a61186dc8db32a307ae1a4e15/storzandbickel_ble-0.1.21.tar.gz", hash = "sha256:caa48b7c8447b06a388b2c1eb5c798124841d713eb4638793d1fc00410eaac7e", size = 118300, upload-time = "2026-08-01T21:21:55.395Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e0/27/ab580d4437ebf222f8285bebe9c99991dc3ec47a1b50691f170a6d1da786/storzandbickel_ble-0.1.20-py3-none-any.whl", hash = "sha256:058ccf7aa87422d9c55370ad87723cdd4cb2e9d49b17913d66b2543a9dd52fdd", size = 37221, upload-time = "2026-06-29T19:19:37.602Z" },
+    { url = "https://files.pythonhosted.org/packages/46/28/3f2d99a2cee47dc0e161a98ca4280a800b0253d5ee6cb919094bd236ee85/storzandbickel_ble-0.1.21-py3-none-any.whl", hash = "sha256:4288454069e6b5e2471da5c04d545288ce5342b0d4e4229c835738d6e9a2d847", size = 37757, upload-time = "2026-08-01T21:21:54.531Z" },
 ]
 
 [[package]]
