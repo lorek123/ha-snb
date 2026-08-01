@@ -6,13 +6,12 @@ import logging
 import re
 from typing import Any, cast
 
-from storzandbickel_ble import StorzBickelClient
 import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
+from storzandbickel_ble import StorzBickelClient
 
 from .const import (
     CONF_DEVICE_ADDRESS,
@@ -181,8 +180,8 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 scanner_count,
                 len(self.discovered_devices),
             )
-        except Exception as ex:
-            _LOGGER.exception("Error discovering devices: %s", ex)
+        except Exception:
+            _LOGGER.exception("Error discovering devices")
             errors["base"] = "scan_failed"
 
         if not self.discovered_devices:
@@ -258,7 +257,7 @@ class StorzBickelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         data=info,
                     )
                 except Exception as ex:
-                    _LOGGER.exception("Unexpected exception: %s", ex)
+                    _LOGGER.exception("Unexpected exception")
                     errors["base"] = str(ex)
 
         schema = vol.Schema(

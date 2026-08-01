@@ -1,10 +1,10 @@
 """Diagnostics tests."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -15,7 +15,9 @@ from custom_components.storzandbickel.const import (
     DOMAIN,
 )
 from custom_components.storzandbickel.data import StorzBickelRuntimeData
-from custom_components.storzandbickel.diagnostics import async_get_config_entry_diagnostics
+from custom_components.storzandbickel.diagnostics import (
+    async_get_config_entry_diagnostics,
+)
 
 
 @pytest.fixture
@@ -57,7 +59,9 @@ async def test_diagnostics_redact_dash_mac(hass: HomeAssistant):
     assert data["device_address_tail"] == "**-**-**-**-DD-EE-FF"
 
 
-async def test_diagnostics_redact_fallback(hass: HomeAssistant, diag_entry: MockConfigEntry):
+async def test_diagnostics_redact_fallback(
+    hass: HomeAssistant, diag_entry: MockConfigEntry
+):
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="X",
@@ -72,7 +76,9 @@ async def test_diagnostics_redact_fallback(hass: HomeAssistant, diag_entry: Mock
     assert data["device_address_tail"] == "***"
 
 
-async def test_diagnostics_unknown_lib_version(hass: HomeAssistant, diag_entry: MockConfigEntry):
+async def test_diagnostics_unknown_lib_version(
+    hass: HomeAssistant, diag_entry: MockConfigEntry
+):
     import importlib.metadata
 
     with patch.object(
@@ -84,7 +90,9 @@ async def test_diagnostics_unknown_lib_version(hass: HomeAssistant, diag_entry: 
         assert data["library_version"] is None
 
 
-async def test_diagnostics_with_coordinator(hass: HomeAssistant, diag_entry: MockConfigEntry):
+async def test_diagnostics_with_coordinator(
+    hass: HomeAssistant, diag_entry: MockConfigEntry
+):
     coord = MagicMock()
     device = MagicMock()
     device.address = "AA:BB:CC:DD:EE:FF"

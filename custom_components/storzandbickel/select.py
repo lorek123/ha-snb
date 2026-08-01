@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from storzandbickel_ble.models import HeaterMode
 
 from .const import DEVICE_TYPE_VEAZY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VOLCANO
-from .data import StorzBickelRuntimeData
 from .coordinator import StorzBickelDataUpdateCoordinator
+from .data import StorzBickelRuntimeData
 from .entity import StorzBickelEntity
 
 VOLCANO_WORKFLOW_PRESETS = ["balloon", "flow1", "flow2", "flow3"]
@@ -76,7 +77,7 @@ class VentyHeaterModeSelect(StorzBickelEntity, SelectEntity):
     is the replacement for the Crafty-only boost button on these devices.
     """
 
-    _attr_options = list(VENTY_HEATER_MODES)
+    _attr_options: ClassVar[list[str]] = list(VENTY_HEATER_MODES)
 
     def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
         super().__init__(coordinator)

@@ -1,4 +1,5 @@
 """Pytest configuration and fixtures."""
+
 from __future__ import annotations
 
 import shutil
@@ -57,15 +58,17 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from homeassistant.core import HomeAssistant
 from home_assistant_bluetooth import SOURCE_LOCAL, BluetoothServiceInfoBleak
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
 def hass_config_dir(hass_tmp_config_dir: str) -> str:
     """Writable config dir that includes this repo's custom component."""
     dest = Path(hass_tmp_config_dir) / "custom_components" / "storzandbickel"
-    src = Path(__file__).resolve().parent.parent / "custom_components" / "storzandbickel"
+    src = (
+        Path(__file__).resolve().parent.parent / "custom_components" / "storzandbickel"
+    )
     if dest.exists():
         shutil.rmtree(dest)
     shutil.copytree(src, dest)
@@ -90,6 +93,7 @@ def mock_coordinator_async_request_refresh(monkeypatch):
     instance level, which takes precedence over this class-level patch.
     """
     from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
     monkeypatch.setattr(DataUpdateCoordinator, "async_request_refresh", AsyncMock())
 
 

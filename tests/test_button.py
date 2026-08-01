@@ -1,16 +1,18 @@
 """Test the button platform."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from storzandbickel_ble.models import DeviceType
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from storzandbickel_ble.models import DeviceType
 
 from custom_components.storzandbickel.button import BoostModeButton, FindDeviceButton
-from custom_components.storzandbickel.coordinator import StorzBickelDataUpdateCoordinator
+from custom_components.storzandbickel.coordinator import (
+    StorzBickelDataUpdateCoordinator,
+)
 
 
 @pytest.fixture
@@ -107,6 +109,7 @@ class TestFindDeviceButton:
     @pytest.fixture
     def coord(self, hass, mock_entry):
         from storzandbickel_ble.models import DeviceType
+
         c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
         c.data = {"state": MagicMock(), "device_type": DeviceType.CRAFTY}
         c.device = MagicMock()

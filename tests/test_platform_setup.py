@@ -5,10 +5,9 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
-from storzandbickel_ble.models import DeviceType
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from storzandbickel_ble.models import DeviceType
 
 from custom_components.storzandbickel import (
     binary_sensor,

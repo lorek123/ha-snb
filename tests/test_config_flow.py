@@ -1,20 +1,19 @@
 """Test the config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from storzandbickel_ble import StorzBickelClient
-from storzandbickel_ble.models import DeviceType
-
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from storzandbickel_ble import StorzBickelClient
+from storzandbickel_ble.models import DeviceType
 
 # Note: bluetooth is not imported here to avoid dependency issues
 # It's patched in tests where needed
-
 from custom_components.storzandbickel.config_flow import (
     normalize_mac_address,
     validate_input,
@@ -69,7 +68,9 @@ class TestMACAddressValidation:
 class TestConfigFlow:
     """Test the config flow."""
 
-    async def test_user_step_choose_method(self, hass: HomeAssistant, mock_bluetooth_scanner):
+    async def test_user_step_choose_method(
+        self, hass: HomeAssistant, mock_bluetooth_scanner
+    ):
         """Test initial user step shows method selection."""
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -79,9 +80,7 @@ class TestConfigFlow:
         assert result["step_id"] == "user"
         assert "setup_method" in result["data_schema"].schema
 
-    async def test_user_step_no_bluetooth_goes_to_manual(
-        self, hass: HomeAssistant
-    ):
+    async def test_user_step_no_bluetooth_goes_to_manual(self, hass: HomeAssistant):
         """Test that missing bluetooth goes directly to manual entry."""
         with patch(
             "homeassistant.components.bluetooth.async_scanner_count",
@@ -173,7 +172,9 @@ class TestConfigFlow:
         self, hass: HomeAssistant, mock_bluetooth_scanner, mock_device_info
     ):
         """Test manual step with valid MAC address."""
-        with patch.object(StorzBickelClient, "scan", new_callable=AsyncMock) as mock_scan:
+        with patch.object(
+            StorzBickelClient, "scan", new_callable=AsyncMock
+        ) as mock_scan:
             mock_device_info.address = "AA:BB:CC:DD:EE:FF"
             mock_device_info.name = "Test Device"
             mock_device_info.device_type = DeviceType.VENTY
@@ -204,7 +205,9 @@ class TestConfigFlow:
         self, hass: HomeAssistant, mock_bluetooth_scanner
     ):
         """Test manual step when MAC is not found in scan."""
-        with patch.object(StorzBickelClient, "scan", new_callable=AsyncMock) as mock_scan:
+        with patch.object(
+            StorzBickelClient, "scan", new_callable=AsyncMock
+        ) as mock_scan:
             mock_scan.return_value = []
 
             result = await hass.config_entries.flow.async_init(
@@ -233,7 +236,9 @@ class TestConfigFlow:
         self, hass: HomeAssistant, mock_bluetooth_scanner
     ):
         """Manual entry handles unexpected scan errors."""
-        with patch.object(StorzBickelClient, "scan", new_callable=AsyncMock) as mock_scan:
+        with patch.object(
+            StorzBickelClient, "scan", new_callable=AsyncMock
+        ) as mock_scan:
             mock_scan.side_effect = RuntimeError("unexpected")
 
             result = await hass.config_entries.flow.async_init(
@@ -266,7 +271,9 @@ class TestConfigFlow:
         connected.address = "AA:BB:CC:DD:EE:FF"
 
         with (
-            patch.object(StorzBickelClient, "scan", new_callable=AsyncMock) as mock_scan,
+            patch.object(
+                StorzBickelClient, "scan", new_callable=AsyncMock
+            ) as mock_scan,
             patch.object(
                 StorzBickelClient, "connect_device", new_callable=AsyncMock
             ) as mock_connect,
@@ -300,7 +307,9 @@ class TestConfigFlow:
         self, hass: HomeAssistant, mock_bluetooth_service_info
     ):
         """Test Bluetooth discovery for unsupported device."""
-        with patch.object(StorzBickelClient, "scan", new_callable=AsyncMock) as mock_scan:
+        with patch.object(
+            StorzBickelClient, "scan", new_callable=AsyncMock
+        ) as mock_scan:
             mock_scan.return_value = []
 
             result = await hass.config_entries.flow.async_init(
@@ -312,9 +321,7 @@ class TestConfigFlow:
             assert result["type"] == FlowResultType.ABORT
             assert result["reason"] == "not_supported"
 
-    async def test_duplicate_entry(
-        self, hass: HomeAssistant, mock_bluetooth_scanner
-    ):
+    async def test_duplicate_entry(self, hass: HomeAssistant, mock_bluetooth_scanner):
         """Test that duplicate entries are aborted."""
         entry = MockConfigEntry(
             domain=DOMAIN,

@@ -5,13 +5,12 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from storzandbickel_ble.models import DeviceState, DeviceType, HeaterMode, VentyState
-
 from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from storzandbickel_ble.models import DeviceState, DeviceType, HeaterMode, VentyState
 
 from custom_components.storzandbickel.climate import StorzBickelClimateEntity
 from custom_components.storzandbickel.coordinator import (

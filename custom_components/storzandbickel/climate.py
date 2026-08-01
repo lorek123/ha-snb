@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 import voluptuous as vol
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.config_entries import ConfigEntry
@@ -14,11 +13,10 @@ from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from storzandbickel_ble.models import HeaterMode, VentyState
 
-from .data import StorzBickelRuntimeData
 from .coordinator import StorzBickelDataUpdateCoordinator
+from .data import StorzBickelRuntimeData
 from .entity import StorzBickelEntity
 
 # Temperature ranges based on device type
@@ -72,7 +70,7 @@ async def async_setup_entry(
 class StorzBickelClimateEntity(StorzBickelEntity, ClimateEntity):
     """Representation of a Storz & Bickel climate entity."""
 
-    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
+    _attr_hvac_modes: ClassVar[list[HVACMode]] = [HVACMode.HEAT, HVACMode.OFF]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TURN_ON

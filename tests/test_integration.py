@@ -1,23 +1,23 @@
 """Test the integration setup."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from storzandbickel_ble.models import DeviceType
-
 from homeassistant.config_entries import ConfigEntries, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from storzandbickel_ble.models import DeviceType
 
 from custom_components.storzandbickel import async_setup_entry, async_unload_entry
-from custom_components.storzandbickel.data import StorzBickelRuntimeData
 from custom_components.storzandbickel.const import (
     CONF_DEVICE_ADDRESS,
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
     DOMAIN,
 )
+from custom_components.storzandbickel.data import StorzBickelRuntimeData
 
 
 @pytest.fixture
@@ -197,14 +197,19 @@ class TestIntegrationSetup:
                 "custom_components.storzandbickel.bluetooth.async_scanner_count",
                 return_value=0,
             ),
-            patch("custom_components.storzandbickel.ir.async_create_issue") as create_issue,
+            patch(
+                "custom_components.storzandbickel.ir.async_create_issue"
+            ) as create_issue,
             patch("custom_components.storzandbickel.ir.async_delete_issue"),
         ):
             mock_coordinator = MagicMock()
             mock_coordinator.entry = mock_entry
             mock_coordinator.async_config_entry_first_refresh = AsyncMock()
             mock_coordinator.device = mock_device
-            mock_coordinator.data = {"state": MagicMock(), "device_type": mock_device.device_type}
+            mock_coordinator.data = {
+                "state": MagicMock(),
+                "device_type": mock_device.device_type,
+            }
             mock_coordinator_class.return_value = mock_coordinator
 
             assert await async_setup_entry(hass, mock_entry) is True
@@ -228,13 +233,18 @@ class TestIntegrationSetup:
                 return_value=1,
             ),
             patch("custom_components.storzandbickel.ir.async_create_issue"),
-            patch("custom_components.storzandbickel.ir.async_delete_issue") as delete_issue,
+            patch(
+                "custom_components.storzandbickel.ir.async_delete_issue"
+            ) as delete_issue,
         ):
             mock_coordinator = MagicMock()
             mock_coordinator.entry = mock_entry
             mock_coordinator.async_config_entry_first_refresh = AsyncMock()
             mock_coordinator.device = mock_device
-            mock_coordinator.data = {"state": MagicMock(), "device_type": mock_device.device_type}
+            mock_coordinator.data = {
+                "state": MagicMock(),
+                "device_type": mock_device.device_type,
+            }
             mock_coordinator_class.return_value = mock_coordinator
 
             assert await async_setup_entry(hass, mock_entry) is True

@@ -5,10 +5,9 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from storzandbickel_ble.models import DeviceState, DeviceType, HeaterMode
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from storzandbickel_ble.models import DeviceState, DeviceType, HeaterMode
 
 from custom_components.storzandbickel.coordinator import (
     StorzBickelDataUpdateCoordinator,

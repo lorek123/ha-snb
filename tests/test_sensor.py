@@ -1,17 +1,19 @@
 """Test the sensor platform."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
 
 import pytest
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from storzandbickel_ble.models import DeviceState, DeviceType
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-
-from custom_components.storzandbickel.coordinator import StorzBickelDataUpdateCoordinator
+from custom_components.storzandbickel.coordinator import (
+    StorzBickelDataUpdateCoordinator,
+)
 from custom_components.storzandbickel.sensor import (
     BatteryLevelSensor,
     ConnectionStateSensor,
