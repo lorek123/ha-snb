@@ -1,4 +1,10 @@
 # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Grouping is what keeps this repo's backlog from re-forming. Every uv update
+# rewrites uv.lock, so ungrouped PRs conflict with each other the moment more
+# than one is open — which is exactly how 11 PRs piled up through mid-2026.
+# A group makes Dependabot resolve all its members in a single pass and emit
+# ONE PR with ONE lock update, and it rebases itself when main moves.
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -6,9 +12,23 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
   - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      python-deps:
+        patterns:
+          - "*"
+        # The runtime library is the only dependency that ships to users (via
+        # manifest.json requirements), so bumping it needs the version-sync
+        # invariant honoured and a tagged release. Keep it in its own PR rather
+        # than burying it in a batch of test-only churn.
+        exclude-patterns:
+          - "storzandbickel-ble"
