@@ -14,7 +14,7 @@ test = [
     "pytest>=9.0.3",
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=7.1.0",
-    "pytest-homeassistant-custom-component>=0.13.348",
+    "pytest-homeassistant-custom-component>=0.13.355",
     "home-assistant-bluetooth>=2.0.0",
     # HA's usb component pulls serialx in transitively without declaring it, so we
     # depend on it explicitly. tests/conftest.py stubs the serial.* modules it expects.
@@ -23,7 +23,7 @@ test = [
 # Static typing and linting (also installed in CI).
 dev = [
     "pyright>=1.1.411",
-    "ruff>=0.1.0",
+    "ruff>=0.16.2",
 ]
 
 [tool.pyright]
