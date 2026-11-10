@@ -269,38 +269,34 @@ class TestRetiredEntityCleanup:
             config_entry=entry,
         ).entity_id
 
-    async def test_removes_retired_crafty_entities(
-        self, hass: HomeAssistant, mock_entry
-    ):
+    async def test_removes_retired_entities(self, hass: HomeAssistant, mock_entry):
         registry = er.async_get(hass)
         boost = self._register(hass, mock_entry, "button", "boost")
         superboost = self._register(hass, mock_entry, "switch", "superboost")
-        charging = self._register(hass, mock_entry, "binary_sensor", "charging")
         ready = self._register(hass, mock_entry, "binary_sensor", "ready")
 
         _async_remove_retired_entities(hass, mock_entry, "crafty")
 
         assert registry.async_get(boost) is None
         assert registry.async_get(superboost) is None
-        assert registry.async_get(charging) is None
         assert registry.async_get(ready) is not None
 
-    async def test_keeps_venty_charging(self, hass: HomeAssistant, mock_entry):
+    async def test_keeps_charging(self, hass: HomeAssistant, mock_entry):
         registry = er.async_get(hass)
         charging = self._register(hass, mock_entry, "binary_sensor", "charging")
 
-        _async_remove_retired_entities(hass, mock_entry, "venty")
+        _async_remove_retired_entities(hass, mock_entry, "crafty")
 
         assert registry.async_get(charging) is not None
 
-    async def test_unknown_device_type_only_removes_global(
-        self, hass: HomeAssistant, mock_entry
-    ):
+    async def test_device_type_filter(self, hass: HomeAssistant, mock_entry):
+        """Entries limited to some device types are skipped for others."""
         registry = er.async_get(hass)
-        boost = self._register(hass, mock_entry, "button", "boost")
-        charging = self._register(hass, mock_entry, "binary_sensor", "charging")
+        ready = self._register(hass, mock_entry, "binary_sensor", "ready")
+        retired = (("binary_sensor", "ready", frozenset({"volcano"})),)
 
-        _async_remove_retired_entities(hass, mock_entry, None)
-
-        assert registry.async_get(boost) is None
-        assert registry.async_get(charging) is not None
+        with patch("custom_components.storzandbickel.RETIRED_ENTITIES", retired):
+            _async_remove_retired_entities(hass, mock_entry, "crafty")
+            assert registry.async_get(ready) is not None
+            _async_remove_retired_entities(hass, mock_entry, "volcano")
+            assert registry.async_get(ready) is None

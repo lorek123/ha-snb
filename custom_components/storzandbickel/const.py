@@ -23,12 +23,8 @@ RETIRED_ENTITIES: tuple[tuple[str, str, frozenset[str] | None], ...] = (
     # the Venty boost button was dropped earlier.
     ("button", "boost", None),
     ("switch", "superboost", None),
-    # Crafty charging sensor (never decoded). Venty/Veazy still have "charging".
-    (
-        "binary_sensor",
-        "charging",
-        frozenset({DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VOLCANO}),
-    ),
+    # Not retired: the Crafty "charging" binary sensor. The official app shows Crafty
+    # charging state, so it is expected to come back under the same unique ID.
 )
 
 
