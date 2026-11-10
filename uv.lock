@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.14.2"
 
 [[package]]
@@ -973,7 +973,7 @@ wheels = [
 
 [[package]]
 name = "ha-snb"
-version = "0.1.28"
+version = "0.1.29"
 source = { virtual = "." }
 dependencies = [
     { name = "storzandbickel-ble" },
@@ -1003,7 +1003,7 @@ requires-dist = [
     { name = "pytest-homeassistant-custom-component", marker = "extra == 'test'", specifier = ">=0.13.348" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "serialx", marker = "extra == 'test'", specifier = ">=1.8.2" },
-    { name = "storzandbickel-ble", specifier = ">=0.1.21" },
+    { name = "storzandbickel-ble", specifier = ">=0.1.22" },
 ]
 provides-extras = ["test", "dev"]
 
@@ -2452,16 +2452,16 @@ wheels = [
 
 [[package]]
 name = "storzandbickel-ble"
-version = "0.1.21"
+version = "0.1.22"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "bleak" },
     { name = "bleak-retry-connector" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/00/92/8be1602da76884a0cb2374fd733139e99c5a61186dc8db32a307ae1a4e15/storzandbickel_ble-0.1.21.tar.gz", hash = "sha256:caa48b7c8447b06a388b2c1eb5c798124841d713eb4638793d1fc00410eaac7e", size = 118300, upload-time = "2026-08-01T21:21:55.395Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1a/03/d73d25daeea84ac51f2e2e2ff510b54984f297aef2714209ea9cbce9eead/storzandbickel_ble-0.1.22.tar.gz", hash = "sha256:1f8f7ddc8150b0b0c13cbe9ad28d778d0f664680faf9fa6cabe6ac7887367586", size = 117600, upload-time = "2026-11-10T07:46:18.773Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/28/3f2d99a2cee47dc0e161a98ca4280a800b0253d5ee6cb919094bd236ee85/storzandbickel_ble-0.1.21-py3-none-any.whl", hash = "sha256:4288454069e6b5e2471da5c04d545288ce5342b0d4e4229c835738d6e9a2d847", size = 37757, upload-time = "2026-08-01T21:21:54.531Z" },
+    { url = "https://files.pythonhosted.org/packages/33/3b/e45b33d349fa461aeeba9cb7e8d366eb1793376f5de600085fa61c32ef0f/storzandbickel_ble-0.1.22-py3-none-any.whl", hash = "sha256:7ba1368991abb3b5d2e7dbad1a8c07a8542580275d9b46bd2bced045386f166f", size = 38979, upload-time = "2026-11-10T07:46:17.288Z" },
 ]
 
 [[package]]
