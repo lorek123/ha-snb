@@ -76,6 +76,12 @@
       },
       "ready": {
         "name": "Ready"
+      },
+      "boost_mode": {
+        "name": "Boost active"
+      },
+      "superboost_mode": {
+        "name": "Superboost active"
       }
     },
     "climate": {
@@ -107,9 +113,6 @@
       "vibration": {
         "name": "Vibration"
       },
-      "superboost": {
-        "name": "Superboost"
-      },
       "boost_timeout_disabled": {
         "name": "Boost timeout disabled"
       },
@@ -136,9 +139,6 @@
       }
     },
     "button": {
-      "boost_mode": {
-        "name": "Boost mode"
-      },
       "find_device": {
         "name": "Find device"
       },

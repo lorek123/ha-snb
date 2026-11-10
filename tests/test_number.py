@@ -192,7 +192,7 @@ class TestVolcanoLedBrightnessNumber:
     @pytest.fixture
     def coord(self, hass, mock_entry):
         state = MagicMock(spec=DeviceState)
-        state.led_brightness = 6
+        state.led_brightness = 60
         c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
         c.data = {"state": state, "device_type": DeviceType.VOLCANO}
         return c
@@ -204,7 +204,11 @@ class TestVolcanoLedBrightnessNumber:
         )
 
     def test_native_value(self, coord):
-        assert VolcanoLedBrightnessNumber(coord).native_value == 6
+        assert VolcanoLedBrightnessNumber(coord).native_value == 60
+
+    def test_range_is_percent(self, coord):
+        n = VolcanoLedBrightnessNumber(coord)
+        assert (n.native_min_value, n.native_max_value, n.native_step) == (0, 100, 10)
 
     def test_native_value_none(self, coord):
         coord.data = None
@@ -215,8 +219,8 @@ class TestVolcanoLedBrightnessNumber:
         device.set_led_brightness = AsyncMock()
         coord.device = device
         coord.async_request_refresh = AsyncMock()
-        await VolcanoLedBrightnessNumber(coord).async_set_native_value(8)
-        device.set_led_brightness.assert_called_once_with(8)
+        await VolcanoLedBrightnessNumber(coord).async_set_native_value(100)
+        device.set_led_brightness.assert_called_once_with(100)
         coord.async_request_refresh.assert_called_once()
 
 
@@ -230,7 +234,7 @@ class TestVolcanoAutoOffNumber:
         return c
 
     def test_native_value(self, coord):
-        assert VolcanoAutoOffNumber(coord).native_value == 1800
+        assert VolcanoAutoOffNumber(coord).native_value == 30
 
     def test_native_value_none(self, coord):
         coord.data = None
@@ -241,8 +245,8 @@ class TestVolcanoAutoOffNumber:
         device.set_auto_off_time = AsyncMock()
         coord.device = device
         coord.async_request_refresh = AsyncMock()
-        await VolcanoAutoOffNumber(coord).async_set_native_value(600)
-        device.set_auto_off_time.assert_called_once_with(600)
+        await VolcanoAutoOffNumber(coord).async_set_native_value(90)
+        device.set_auto_off_time.assert_called_once_with(5400)
         coord.async_request_refresh.assert_called_once()
 
 

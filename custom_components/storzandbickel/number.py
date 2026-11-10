@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -152,12 +152,14 @@ class CraftyAutoOffNumber(StorzBickelEntity, NumberEntity):
 
 
 class VolcanoLedBrightnessNumber(StorzBickelEntity, NumberEntity):
-    """Volcano display/LED brightness (1-9)."""
+    """Volcano display/LED brightness (0-100 %, steps of 10 like the vendor app)."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_native_min_value = 1
-    _attr_native_max_value = 9
-    _attr_native_step = 1
+    _attr_native_min_value = 0
+    _attr_native_max_value = 100
+    _attr_native_step = 10
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_mode = NumberMode.SLIDER
 
     def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
         super().__init__(coordinator)
@@ -176,13 +178,16 @@ class VolcanoLedBrightnessNumber(StorzBickelEntity, NumberEntity):
 
 
 class VolcanoAutoOffNumber(StorzBickelEntity, NumberEntity):
-    """Volcano auto-off time in seconds (0 = disabled)."""
+    """Volcano auto-off time in minutes (vendor app range 30-360, step 30).
+
+    The device stores seconds; this entity converts.
+    """
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_native_min_value = 0
-    _attr_native_max_value = 3600
+    _attr_native_min_value = 30
+    _attr_native_max_value = 360
     _attr_native_step = 30
-    _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
         super().__init__(coordinator)
@@ -194,10 +199,13 @@ class VolcanoAutoOffNumber(StorzBickelEntity, NumberEntity):
         state = self.device_state
         if state is None:
             return None
-        return getattr(state, "auto_off_time", None)
+        seconds = getattr(state, "auto_off_time", None)
+        if not isinstance(seconds, (int, float)):
+            return None
+        return seconds / 60
 
     async def async_set_native_value(self, value: float) -> None:
-        await self._async_call_device("set_auto_off_time", int(value))
+        await self._async_call_device("set_auto_off_time", int(value) * 60)
 
 
 class VentyBoostOffsetNumber(StorzBickelEntity, NumberEntity):
