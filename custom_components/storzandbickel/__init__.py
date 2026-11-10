@@ -6,9 +6,10 @@ from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 
-from .const import DOMAIN
+from .const import DOMAIN, RETIRED_ENTITIES
 from .coordinator import StorzBickelDataUpdateCoordinator
 from .data import StorzBickelRuntimeData
 
@@ -42,9 +43,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         ir.async_delete_issue(hass, DOMAIN, "no_connectable_bluetooth")
 
+    _async_remove_retired_entities(hass, entry, coordinator.device_slug())
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+def _async_remove_retired_entities(
+    hass: HomeAssistant, entry: ConfigEntry, device_slug: str | None
+) -> None:
+    """Delete registry entries for entities this integration no longer provides."""
+    registry = er.async_get(hass)
+    for platform, suffix, device_types in RETIRED_ENTITIES:
+        if device_types is not None and device_slug not in device_types:
+            continue
+        entity_id = registry.async_get_entity_id(
+            platform, DOMAIN, f"{entry.entry_id}_{suffix}"
+        )
+        if entity_id is not None:
+            registry.async_remove(entity_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

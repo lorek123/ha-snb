@@ -15,6 +15,18 @@ DEVICE_TYPE_VENTY = "venty"
 DEVICE_TYPE_CRAFTY = "crafty"
 DEVICE_TYPE_VEAZY = "veazy"
 
+# Entities removed in past releases, as (platform, unique-id suffix, device types).
+# HA keeps retired entities in the registry as "unavailable" until deleted by hand,
+# so setup removes them. A device-type set of None means "every device".
+RETIRED_ENTITIES: tuple[tuple[str, str, frozenset[str] | None], ...] = (
+    # Crafty boost button / superboost switch -> read-only binary sensors (0.1.29);
+    # the Venty boost button was dropped earlier.
+    ("button", "boost", None),
+    ("switch", "superboost", None),
+    # Never retire "charging": the Crafty charging sensor was dropped once and has
+    # come back under the same unique ID.
+)
+
 
 def device_type_slug(device_type: object | None) -> str | None:
     """Normalize storzandbickel_ble DeviceType to a lowercase slug."""

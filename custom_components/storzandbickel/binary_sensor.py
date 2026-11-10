@@ -39,6 +39,7 @@ async def async_setup_entry(
         entities.append(ReadyBinarySensor(coordinator))
 
     if dt == DEVICE_TYPE_CRAFTY:
+        entities.append(CraftyChargingBinarySensor(coordinator))
         entities.append(CraftyBoostActiveBinarySensor(coordinator))
         entities.append(CraftySuperboostActiveBinarySensor(coordinator))
 
@@ -50,6 +51,7 @@ class VentyChargingBinarySensor(StorzBickelEntity, BinarySensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
+    _state_attr = "charger_connected"
 
     def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
         super().__init__(coordinator)
@@ -61,8 +63,19 @@ class VentyChargingBinarySensor(StorzBickelEntity, BinarySensorEntity):
         state = self.device_state
         if state is None:
             return None
-        charging = getattr(state, "charger_connected", None)
+        charging = getattr(state, self._state_attr, None)
         return bool(charging) if charging is not None else None
+
+
+class CraftyChargingBinarySensor(VentyChargingBinarySensor):
+    """Crafty charging: charger connected and battery not yet full.
+
+    Matches the device LED (blinking while charging, solid when full). Same unique
+    ID as the Crafty charging sensor removed in an earlier release, so existing
+    entities come back.
+    """
+
+    _state_attr = "charging"
 
 
 class ReadyBinarySensor(StorzBickelEntity, BinarySensorEntity):
