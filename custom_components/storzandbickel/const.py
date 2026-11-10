@@ -23,6 +23,12 @@ RETIRED_ENTITIES: tuple[tuple[str, str, frozenset[str] | None], ...] = (
     # the Venty boost button was dropped earlier.
     ("button", "boost", None),
     ("switch", "superboost", None),
+    # Venty/Veazy current temperature: the device never reports one (#8).
+    (
+        "sensor",
+        "current_temperature",
+        frozenset({DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY}),
+    ),
     # Never retire "charging": the Crafty charging sensor was dropped once and has
     # come back under the same unique ID.
 )

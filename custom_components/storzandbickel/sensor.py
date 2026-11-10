@@ -40,12 +40,14 @@ async def async_setup_entry(
     coordinator = runtime.coordinator
     entities: list[SensorEntity] = []
 
-    # Always add temperature sensor
-    entities.append(CurrentTemperatureSensor(coordinator))
+    dt = coordinator.device_slug()
+
+    # Venty/Veazy never report a live temperature over BLE (the official app hides
+    # it too), so only the other models get a current-temperature sensor.
+    if dt not in [DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
+        entities.append(CurrentTemperatureSensor(coordinator))
     entities.append(ConnectionStateSensor(coordinator))
     entities.append(SignalStrengthSensor(coordinator))
-
-    dt = coordinator.device_slug()
 
     if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(BatteryLevelSensor(coordinator))
