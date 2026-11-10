@@ -7,10 +7,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from homeassistant.config_entries import ConfigEntries, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from storzandbickel_ble.models import DeviceType
 
-from custom_components.storzandbickel import async_setup_entry, async_unload_entry
+from custom_components.storzandbickel import (
+    _async_remove_retired_entities,
+    async_setup_entry,
+    async_unload_entry,
+)
 from custom_components.storzandbickel.const import (
     CONF_DEVICE_ADDRESS,
     CONF_DEVICE_NAME,
@@ -249,3 +254,53 @@ class TestIntegrationSetup:
 
             assert await async_setup_entry(hass, mock_entry) is True
             delete_issue.assert_called_once()
+
+
+class TestRetiredEntityCleanup:
+    """Entities dropped in earlier releases are removed from the registry."""
+
+    @staticmethod
+    def _register(hass: HomeAssistant, entry, platform: str, suffix: str) -> str:
+        registry = er.async_get(hass)
+        return registry.async_get_or_create(
+            platform,
+            DOMAIN,
+            f"{entry.entry_id}_{suffix}",
+            config_entry=entry,
+        ).entity_id
+
+    async def test_removes_retired_crafty_entities(
+        self, hass: HomeAssistant, mock_entry
+    ):
+        registry = er.async_get(hass)
+        boost = self._register(hass, mock_entry, "button", "boost")
+        superboost = self._register(hass, mock_entry, "switch", "superboost")
+        charging = self._register(hass, mock_entry, "binary_sensor", "charging")
+        ready = self._register(hass, mock_entry, "binary_sensor", "ready")
+
+        _async_remove_retired_entities(hass, mock_entry, "crafty")
+
+        assert registry.async_get(boost) is None
+        assert registry.async_get(superboost) is None
+        assert registry.async_get(charging) is None
+        assert registry.async_get(ready) is not None
+
+    async def test_keeps_venty_charging(self, hass: HomeAssistant, mock_entry):
+        registry = er.async_get(hass)
+        charging = self._register(hass, mock_entry, "binary_sensor", "charging")
+
+        _async_remove_retired_entities(hass, mock_entry, "venty")
+
+        assert registry.async_get(charging) is not None
+
+    async def test_unknown_device_type_only_removes_global(
+        self, hass: HomeAssistant, mock_entry
+    ):
+        registry = er.async_get(hass)
+        boost = self._register(hass, mock_entry, "button", "boost")
+        charging = self._register(hass, mock_entry, "binary_sensor", "charging")
+
+        _async_remove_retired_entities(hass, mock_entry, None)
+
+        assert registry.async_get(boost) is None
+        assert registry.async_get(charging) is not None
