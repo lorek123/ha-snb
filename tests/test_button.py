@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from storzandbickel_ble.models import DeviceType
 
-from custom_components.storzandbickel.button import BoostModeButton, FindDeviceButton
+from custom_components.storzandbickel.button import FindDeviceButton
 from custom_components.storzandbickel.coordinator import (
     StorzBickelDataUpdateCoordinator,
 )
@@ -28,7 +28,6 @@ def mock_entry():
 def mock_device():
     """Create a mock device."""
     device = AsyncMock()
-    device.toggle_boost_mode = AsyncMock()
     return device
 
 
@@ -44,43 +43,6 @@ def coordinator(hass: HomeAssistant, mock_entry, mock_device):
         "address": "AA:BB:CC:DD:EE:FF",
     }
     return coordinator
-
-
-class TestBoostModeButton:
-    """Test the boost mode button."""
-
-    def test_initialization(self, coordinator):
-        """Test button initialization."""
-        button = BoostModeButton(coordinator)
-
-        assert button._attr_unique_id == "test-entry_boost"
-        assert button._attr_has_entity_name is True
-        assert button._attr_translation_key == "boost_mode"
-
-    async def test_press(self, coordinator, mock_device):
-        """Test button press."""
-        button = BoostModeButton(coordinator)
-
-        await button.async_press()
-
-        mock_device.toggle_boost_mode.assert_called_once()
-
-    async def test_press_no_device(self, coordinator):
-        """Test button press when device is None."""
-        coordinator.device = None
-        button = BoostModeButton(coordinator)
-
-        # Should not raise an error
-        await button.async_press()
-
-    async def test_press_no_method(self, coordinator):
-        """Test button press when device doesn't have the method."""
-        coordinator.device = MagicMock()
-        del coordinator.device.toggle_boost_mode
-        button = BoostModeButton(coordinator)
-
-        # Should not raise an error
-        await button.async_press()
 
 
 class TestConnectionButtons:

@@ -51,7 +51,6 @@ async def async_setup_entry(
         entities.append(BoostVisualizationSwitch(coordinator))
 
     if dt == DEVICE_TYPE_CRAFTY:
-        entities.append(SuperboostSwitch(coordinator))
         entities.append(ChargeLedSwitch(coordinator))
         entities.append(PermanentBluetoothSwitch(coordinator))
 
@@ -106,7 +105,7 @@ class AirPumpSwitch(StorzBickelEntity, SwitchEntity):
 class _FlagSwitch(StorzBickelEntity, SwitchEntity):
     """Base for boolean device flags read from state and toggled via a setter.
 
-    Vibration, superboost, and boost-timeout are the same switch wearing different
+    Vibration, display-on-cooling, and boost-timeout are the same switch wearing different
     labels: read one boolean off the coordinator state, write it with one device
     coroutine. Subclasses declare the three names below; all the plumbing —
     presence guard, getattr read, guarded setter call — lives here once.
@@ -141,14 +140,6 @@ class VibrationSwitch(_FlagSwitch):
     _flag_key = "vibration"
     _state_attr = "vibration_enabled"
     _setter = "set_vibration"
-
-
-class SuperboostSwitch(_FlagSwitch):
-    """Enable/disable superboost mode on Crafty."""
-
-    _flag_key = "superboost"
-    _state_attr = "superboost_mode"
-    _setter = "set_superboost"
 
 
 class BoostTimeoutDisabledSwitch(_FlagSwitch):

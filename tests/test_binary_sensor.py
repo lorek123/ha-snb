@@ -10,6 +10,8 @@ from homeassistant.core import HomeAssistant
 from storzandbickel_ble.models import DeviceState, DeviceType
 
 from custom_components.storzandbickel.binary_sensor import (
+    CraftyBoostActiveBinarySensor,
+    CraftySuperboostActiveBinarySensor,
     ReadyBinarySensor,
     VentyChargingBinarySensor,
 )
@@ -78,3 +80,60 @@ class TestReadyBinarySensor:
         coord = StorzBickelDataUpdateCoordinator(hass, mock_entry)
         coord.data = {"state": state, "device_type": DeviceType.CRAFTY}
         assert ReadyBinarySensor(coord).is_on is True
+
+
+class TestReadyTemperatureFallback:
+    @pytest.fixture
+    def coord(self, hass: HomeAssistant, mock_entry):
+        state = MagicMock()
+        state.setpoint_reached = False
+        state.heater_on = True
+        state.current_temperature = 179.5
+        state.target_temperature = 180.0
+        c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        c.data = {"state": state, "device_type": DeviceType.CRAFTY}
+        return c
+
+    def test_on_when_within_tolerance(self, coord):
+        assert ReadyBinarySensor(coord).is_on is True
+
+    def test_off_while_heating_up(self, coord):
+        coord.data["state"].current_temperature = 150.0
+        assert ReadyBinarySensor(coord).is_on is False
+
+    def test_off_when_heater_off(self, coord):
+        coord.data["state"].heater_on = False
+        assert ReadyBinarySensor(coord).is_on is False
+
+    def test_off_when_temperature_unknown(self, coord):
+        coord.data["state"].current_temperature = None
+        assert ReadyBinarySensor(coord).is_on is False
+
+
+class TestCraftyBoostBinarySensors:
+    @pytest.fixture
+    def coord(self, hass: HomeAssistant, mock_entry):
+        state = MagicMock()
+        state.boost_mode = False
+        state.superboost_mode = True
+        c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        c.data = {"state": state, "device_type": DeviceType.CRAFTY}
+        return c
+
+    def test_unique_ids(self, coord):
+        assert (
+            CraftyBoostActiveBinarySensor(coord)._attr_unique_id
+            == "test-entry_boost_mode"
+        )
+        assert (
+            CraftySuperboostActiveBinarySensor(coord)._attr_unique_id
+            == "test-entry_superboost_mode"
+        )
+
+    def test_states(self, coord):
+        assert CraftyBoostActiveBinarySensor(coord).is_on is False
+        assert CraftySuperboostActiveBinarySensor(coord).is_on is True
+
+    def test_none_when_no_data(self, coord):
+        coord.data = None
+        assert CraftyBoostActiveBinarySensor(coord).is_on is None

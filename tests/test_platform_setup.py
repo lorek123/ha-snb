@@ -56,7 +56,7 @@ def _coord(hass: HomeAssistant, entry: MagicMock, device_type: DeviceType):
         (DeviceType.VOLCANO, 2),
         (DeviceType.VENTY, 3),
         (DeviceType.VEAZY, 3),
-        (DeviceType.CRAFTY, 4),
+        (DeviceType.CRAFTY, 3),
     ],
 )
 async def test_button_platform_entities(
@@ -74,7 +74,7 @@ async def test_button_platform_entities(
 @pytest.mark.parametrize(
     ("device_type", "expected"),
     [
-        (DeviceType.CRAFTY, 1),
+        (DeviceType.CRAFTY, 3),
         (DeviceType.VOLCANO, 0),
         (DeviceType.VENTY, 2),
         (DeviceType.VEAZY, 2),
@@ -171,7 +171,7 @@ async def test_sensor_platform(
         (DeviceType.VOLCANO, 3),
         (DeviceType.VENTY, 5),
         (DeviceType.VEAZY, 4),
-        (DeviceType.CRAFTY, 4),
+        (DeviceType.CRAFTY, 3),
     ],
 )
 async def test_switch_platform(

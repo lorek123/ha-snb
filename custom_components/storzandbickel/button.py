@@ -33,29 +33,13 @@ async def async_setup_entry(
     ]
 
     dt = coordinator.device_slug()
-    # Boost is a momentary toggle only on Crafty (toggle_boost_mode). Venty/Veazy
-    # boost is a heater mode, not a toggle, so no boost button there (yet).
-    if dt == DEVICE_TYPE_CRAFTY:
-        entities.append(BoostModeButton(coordinator))
+    # No Crafty boost button: boost/superboost can only be activated with the device
+    # button; the firmware ignores BLE writes (see binary_sensor boost_active).
 
     if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(FindDeviceButton(coordinator))
 
     async_add_entities(entities)
-
-
-class BoostModeButton(StorzBickelEntity, ButtonEntity):
-    """Representation of a boost mode button."""
-
-    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
-        """Initialize the boost mode button."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.entry.entry_id}_boost"
-        self._attr_translation_key = "boost_mode"
-
-    async def async_press(self) -> None:
-        """Handle the button press."""
-        await self._async_call_device("toggle_boost_mode")
 
 
 class FindDeviceButton(StorzBickelEntity, ButtonEntity):

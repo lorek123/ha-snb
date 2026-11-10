@@ -18,6 +18,9 @@ from .entity import StorzBickelEntity
 
 PARALLEL_UPDATES = 1
 
+# Degrees below target that still count as "ready" when the device flag is unset.
+READY_TOLERANCE = 1.0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -36,6 +39,10 @@ async def async_setup_entry(
 
     if dt in [DEVICE_TYPE_CRAFTY, DEVICE_TYPE_VENTY, DEVICE_TYPE_VEAZY]:
         entities.append(ReadyBinarySensor(coordinator))
+
+    if dt == DEVICE_TYPE_CRAFTY:
+        entities.append(CraftyBoostActiveBinarySensor(coordinator))
+        entities.append(CraftySuperboostActiveBinarySensor(coordinator))
 
     async_add_entities(entities)
 
@@ -73,4 +80,47 @@ class ReadyBinarySensor(StorzBickelEntity, BinarySensorEntity):
         state = self.device_state
         if state is None:
             return None
-        return bool(getattr(state, "setpoint_reached", False))
+        if getattr(state, "setpoint_reached", False) is True:
+            return True
+        # Fallback: some firmware never sets (or only pulses) the setpoint-reached
+        # flag, so also treat "heating and within 1 degree of target" as ready.
+        heater_on = getattr(state, "heater_on", None)
+        current = getattr(state, "current_temperature", None)
+        target = getattr(state, "target_temperature", None)
+        if (
+            heater_on is True
+            and isinstance(current, (int, float))
+            and isinstance(target, (int, float))
+        ):
+            return current >= target - READY_TOLERANCE
+        return False
+
+
+class _CraftyBoostFlagBinarySensor(StorzBickelEntity, BinarySensorEntity):
+    """Boost state reported by the Crafty (set with the device button only)."""
+
+    _state_attr: str
+
+    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_{self._state_attr}"
+        self._attr_translation_key = self._state_attr
+
+    @property
+    def is_on(self) -> bool | None:
+        state = self.device_state
+        if state is None:
+            return None
+        return bool(getattr(state, self._state_attr, False))
+
+
+class CraftyBoostActiveBinarySensor(_CraftyBoostFlagBinarySensor):
+    """Crafty boost mode active."""
+
+    _state_attr = "boost_mode"
+
+
+class CraftySuperboostActiveBinarySensor(_CraftyBoostFlagBinarySensor):
+    """Crafty superboost mode active."""
+
+    _state_attr = "superboost_mode"
