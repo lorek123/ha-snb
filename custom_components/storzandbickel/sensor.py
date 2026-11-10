@@ -145,6 +145,10 @@ class ConnectionStateSensor(StorzBickelEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "connection_state"
 
+    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_connection_state"
+
     @property
     def native_value(self) -> str:
         """Return connection state."""
@@ -156,6 +160,11 @@ class SignalStrengthSensor(StorzBickelEntity, SensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "signal_strength"
+
+    def __init__(self, coordinator: StorzBickelDataUpdateCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_signal_strength"
+
     _attr_native_unit_of_measurement = "dBm"
     _attr_state_class = SensorStateClass.MEASUREMENT
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, ClassVar
 
-import voluptuous as vol
+import probatio as vol
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.config_entries import ConfigEntry
@@ -76,7 +76,7 @@ class StorzBickelClimateEntity(StorzBickelEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = TEMP_MIN
     _attr_max_temp = TEMP_MAX
     _attr_target_temperature_step = TEMP_STEP
@@ -88,7 +88,7 @@ class StorzBickelClimateEntity(StorzBickelEntity, ClimateEntity):
         self._attr_translation_key = "temperature"
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         state = self.device_state
         if state is None:
@@ -96,7 +96,7 @@ class StorzBickelClimateEntity(StorzBickelEntity, ClimateEntity):
         return state.current_temperature
 
     @property
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         state = self.device_state
         if state is None:

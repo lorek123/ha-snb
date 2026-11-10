@@ -6,7 +6,7 @@ import logging
 import re
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio as vol
 from homeassistant import config_entries
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigFlowResult
