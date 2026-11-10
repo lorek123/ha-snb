@@ -74,7 +74,7 @@ async def test_button_platform_entities(
 @pytest.mark.parametrize(
     ("device_type", "expected"),
     [
-        (DeviceType.CRAFTY, 3),
+        (DeviceType.CRAFTY, 4),
         (DeviceType.VOLCANO, 0),
         (DeviceType.VENTY, 2),
         (DeviceType.VEAZY, 2),

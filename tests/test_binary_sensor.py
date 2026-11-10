@@ -11,6 +11,7 @@ from storzandbickel_ble.models import DeviceState, DeviceType
 
 from custom_components.storzandbickel.binary_sensor import (
     CraftyBoostActiveBinarySensor,
+    CraftyChargingBinarySensor,
     CraftySuperboostActiveBinarySensor,
     ReadyBinarySensor,
     VentyChargingBinarySensor,
@@ -137,3 +138,30 @@ class TestCraftyBoostBinarySensors:
     def test_none_when_no_data(self, coord):
         coord.data = None
         assert CraftyBoostActiveBinarySensor(coord).is_on is None
+
+
+class TestCraftyChargingBinarySensor:
+    @pytest.fixture
+    def coord(self, hass: HomeAssistant, mock_entry):
+        state = MagicMock()
+        state.charging = True
+        state.charger_connected = True
+        c = StorzBickelDataUpdateCoordinator(hass, mock_entry)
+        c.data = {"state": state, "device_type": DeviceType.CRAFTY}
+        return c
+
+    def test_unique_id_matches_previous_crafty_sensor(self, coord):
+        assert (
+            CraftyChargingBinarySensor(coord)._attr_unique_id == "test-entry_charging"
+        )
+
+    def test_charging(self, coord):
+        assert CraftyChargingBinarySensor(coord).is_on is True
+
+    def test_full_with_charger_connected_is_not_charging(self, coord):
+        coord.data["state"].charging = False
+        assert CraftyChargingBinarySensor(coord).is_on is False
+
+    def test_unknown_with_older_library(self, coord):
+        coord.data["state"].charging = None
+        assert CraftyChargingBinarySensor(coord).is_on is None
