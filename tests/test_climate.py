@@ -72,7 +72,7 @@ class TestStorzBickelClimateEntity:
         assert entity._attr_unique_id == "test-entry_climate"
         assert entity._attr_has_entity_name is True
         assert entity._attr_translation_key == "temperature"
-        assert entity._attr_temperature_unit == UnitOfTemperature.CELSIUS
+        assert entity._attr_native_temperature_unit == UnitOfTemperature.CELSIUS
         assert entity._attr_min_temp == 40.0
         assert entity._attr_max_temp == 230.0
         assert entity._attr_target_temperature_step == 1.0
@@ -83,27 +83,27 @@ class TestStorzBickelClimateEntity:
         """Test current temperature property."""
         entity = StorzBickelClimateEntity(coordinator)
 
-        assert entity.current_temperature == 180.0
+        assert entity.native_current_temperature == 180.0
 
     def test_current_temperature_none(self, coordinator):
         """Test current temperature when data is None."""
         coordinator.data = None
         entity = StorzBickelClimateEntity(coordinator)
 
-        assert entity.current_temperature is None
+        assert entity.native_current_temperature is None
 
     def test_target_temperature(self, coordinator, mock_device_state):
         """Test target temperature property."""
         entity = StorzBickelClimateEntity(coordinator)
 
-        assert entity.target_temperature == 185.0
+        assert entity.native_target_temperature == 185.0
 
     def test_target_temperature_none(self, coordinator):
         """Test target temperature when data is None."""
         coordinator.data = None
         entity = StorzBickelClimateEntity(coordinator)
 
-        assert entity.target_temperature is None
+        assert entity.native_target_temperature is None
 
     def test_hvac_mode_heat(self, coordinator, mock_device_state):
         """Test HVAC mode when heater is on."""
@@ -260,3 +260,10 @@ async def test_async_run_workflow_unsupported_device(coordinator):
         await entity.async_run_workflow(
             [{"temperature": 180.0, "hold_seconds": 0.0, "pump_seconds": 5.0}]
         )
+
+
+def test_climate_entity_uses_native_api_only():
+    """No deprecated (pre-2026.11) climate members on the entity class."""
+    for name in ("current_temperature", "target_temperature"):
+        assert name not in StorzBickelClimateEntity.__dict__
+    assert "_attr_temperature_unit" not in StorzBickelClimateEntity.__dict__

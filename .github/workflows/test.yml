@@ -35,6 +35,15 @@ jobs:
         PYTHONPATH: ${{ github.workspace }}
       run: uv run pytest --cov=custom_components/storzandbickel --cov-report=xml --cov-report=term
 
+    # The integration targets HA 2026.11 (hacs.json), but the newest
+    # pytest-homeassistant-custom-component still pins 2026.10, so tests run on
+    # that. Type-check against the real target too. Drop this step once the
+    # harness ships a 2026.11 release and the lockfile moves to it.
+    - name: Run pyright against the target Home Assistant
+      run: |
+        uv pip install homeassistant==2026.11.1
+        uv run --no-sync pyright custom_components/storzandbickel
+
     - name: Upload coverage
       uses: codecov/codecov-action@v7
       with:

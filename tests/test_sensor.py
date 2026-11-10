@@ -146,6 +146,17 @@ class TestConnectionAndSignalSensors:
         sensor = SignalStrengthSensor(coordinator)
         assert sensor.native_value is None
 
+    def test_unique_ids(self, coordinator):
+        """Diagnostic sensors need unique IDs to attach to the device."""
+        assert (
+            ConnectionStateSensor(coordinator)._attr_unique_id
+            == "test-entry_connection_state"
+        )
+        assert (
+            SignalStrengthSensor(coordinator)._attr_unique_id
+            == "test-entry_signal_strength"
+        )
+
     def test_device_info_includes_firmware_and_serial(self, coordinator):
         """Firmware/serial should show up when device exposes them."""
         coordinator.device = MagicMock(
