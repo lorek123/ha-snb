@@ -147,8 +147,8 @@ async def test_select_platform(
     ("device_type", "expected_entities"),
     [
         (DeviceType.VOLCANO, 4),
-        (DeviceType.VENTY, 4),
-        (DeviceType.VEAZY, 4),
+        (DeviceType.VENTY, 3),
+        (DeviceType.VEAZY, 3),
         (DeviceType.CRAFTY, 5),
     ],
 )
@@ -158,7 +158,7 @@ async def test_sensor_platform(
     device_type: DeviceType,
     expected_entities: int,
 ):
-    """Always temp+connection+signal; battery on portable lines."""
+    """Connection+signal always; temp except Venty/Veazy; battery on portables."""
     _coord(hass, flow_entry, device_type)
     added = MagicMock()
     await sensor.async_setup_entry(hass, flow_entry, added)

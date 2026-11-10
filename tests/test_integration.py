@@ -300,3 +300,20 @@ class TestRetiredEntityCleanup:
             assert registry.async_get(ready) is not None
             _async_remove_retired_entities(hass, mock_entry, "volcano")
             assert registry.async_get(ready) is None
+
+
+async def test_venty_current_temperature_retired(hass: HomeAssistant, mock_entry):
+    """Venty/Veazy lose the never-populated temperature sensor; Crafty keeps it."""
+    registry = er.async_get(hass)
+    temp = registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{mock_entry.entry_id}_current_temperature",
+        config_entry=mock_entry,
+    ).entity_id
+
+    _async_remove_retired_entities(hass, mock_entry, "crafty")
+    assert registry.async_get(temp) is not None
+
+    _async_remove_retired_entities(hass, mock_entry, "venty")
+    assert registry.async_get(temp) is None
